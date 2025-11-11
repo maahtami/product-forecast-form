@@ -18,21 +18,20 @@ creds = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPE
 client = gspread.authorize(creds)
 sheet = client.open(SHEET_NAME).sheet1  # first worksheet
 
-
 # --- Streamlit page setup ---
 st.set_page_config(page_title="Product Forecast Form", layout="centered")
 
+# --- Custom logo and header ---
 st.markdown(
     """
-    <div style="text-align: center;">
-        <img src="logo.png" width="180">
-        <h1>📊 Product Forecast Form</h1>
+    <div style="text-align: center; padding: 10px; background-color: #1E1E1E; border-radius: 10px;">
+        <img src="logo.png" width="180" style="margin-bottom:10px;">
+        <h1 style="color: white;">📊 Product Forecast Form</h1>
     </div>
     """,
     unsafe_allow_html=True
 )
 
-st.title("📊 Product Forecast Form")
 
 
 
