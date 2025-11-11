@@ -5,8 +5,11 @@ import gspread
 from google.oauth2.service_account import Credentials
 
 # --- Google Sheets setup ---
-SHEET_NAME = "Product Forecast Data"  # Name of your Google Sheet
-SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
+SHEET_NAME = "Product Forecast Data"
+SCOPES = [
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/drive"
+]
 SERVICE_ACCOUNT_FILE = "service_account.json"
 
 creds = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
