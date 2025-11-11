@@ -1,16 +1,26 @@
 import streamlit as st
 import pandas as pd
 import os
+import gspread
+from google.oauth2.service_account import Credentials
 
+# --- Google Sheets setup ---
+SHEET_NAME = "Product Forecast Data"  # Name of your Google Sheet
+SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
+SERVICE_ACCOUNT_FILE = "service_account.json"
+
+creds = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+client = gspread.authorize(creds)
+sheet = client.open(SHEET_NAME).sheet1  # first worksheet
+
+# --- Streamlit page setup ---
 st.set_page_config(page_title="Product Forecast Form", layout="centered")
+st.title("📊 Product Forecast Form")
 
-st.title("📈 Product Forecast Form")
-
-# --- Load product list ---
+# --- Load product data ---
 @st.cache_data
 def load_data():
-    df = pd.read_csv("product list.csv")
-    return df
+    return pd.read_csv("product list.csv")
 
 df = load_data()
 
@@ -20,31 +30,31 @@ countries = [
     "Germany", "Greece", "Lebanon", "Tanzania", "Botswana", "Syria",
     "South Africa", "Netherland", "Kenya", "Sudan", "Bulgaria", "Other"
 ]
+
 country = st.selectbox("🌍 Select Country", countries)
 
 # --- Company name ---
 company = st.text_input("🏢 Company Name")
 
 st.markdown("---")
-
 st.subheader("🧾 Product Forecast")
 
-# --- Product entry section ---
+# --- Initialize session state ---
 if "product_entries" not in st.session_state:
     st.session_state.product_entries = []
 
-# Add new product row
-if st.button("➕ Add Forecast Row"):
+# --- Add forecast row button ---
+if st.button("➕ Add Product Forecast Row"):
     st.session_state.product_entries.append({
-        "group": None, "product": None,
+        "group": None,
+        "name": None,
         "q1": 0, "q2": 0, "q3": 0, "q4": 0,
-        "code": None, "description": None
+        "total": 0
     })
 
-# --- Display product selection rows ---
+# --- Display product rows ---
 for i, entry in enumerate(st.session_state.product_entries):
-    st.markdown(f"### 🔹 Product #{i+1}")
-
+    st.markdown(f"#### Product {i+1}")
     col1, col2 = st.columns(2)
     with col1:
         group = st.selectbox(
@@ -54,44 +64,33 @@ for i, entry in enumerate(st.session_state.product_entries):
         )
     with col2:
         filtered_df = df[df["Product Group"] == group]
-        product = st.selectbox(
+        name = st.selectbox(
             f"Product Name {i+1}",
             filtered_df["Product Name"].unique(),
-            key=f"product_{i}"
+            key=f"name_{i}"
         )
 
-    # --- Show product details (code + description) ---
-    details = filtered_df[filtered_df["Product Name"] == product].iloc[0]
-    st.write(f"**Product Code:** {details['PRODUCT CODE']}")
-    st.write(f"**Description:** {details['Description']}")
+    desc = filtered_df.loc[filtered_df["Product Name"] == name, "Description"].values[0]
+    st.caption(f"**Description:** {desc}")
 
-    # --- Quarterly forecast inputs ---
-    st.markdown("#### 📦 Forecast Quantities per Quarter")
-    q1, q2, q3, q4 = st.columns(4)
-    with q1:
-        q1_val = st.number_input("Q1", min_value=0, key=f"q1_{i}")
-    with q2:
-        q2_val = st.number_input("Q2", min_value=0, key=f"q2_{i}")
-    with q3:
-        q3_val = st.number_input("Q3", min_value=0, key=f"q3_{i}")
-    with q4:
-        q4_val = st.number_input("Q4", min_value=0, key=f"q4_{i}")
+    q1 = st.number_input(f"Q1 Quantity {i+1}", min_value=0, key=f"q1_{i}")
+    q2 = st.number_input(f"Q2 Quantity {i+1}", min_value=0, key=f"q2_{i}")
+    q3 = st.number_input(f"Q3 Quantity {i+1}", min_value=0, key=f"q3_{i}")
+    q4 = st.number_input(f"Q4 Quantity {i+1}", min_value=0, key=f"q4_{i}")
+    total = q1 + q2 + q3 + q4
+    st.write(f"**Total:** {total}")
 
-    total = q1_val + q2_val + q3_val + q4_val
-    st.info(f"**Total Forecast Quantity:** {total}")
-
-    st.session_state.product_entries[i].update({
-        "country": country,
-        "company": company,
+    st.session_state.product_entries[i] = {
         "group": group,
-        "product": product,
-        "code": details["PRODUCT CODE"],
-        "description": details["Description"],
-        "q1": q1_val, "q2": q2_val, "q3": q3_val, "q4": q4_val,
+        "name": name,
+        "q1": q1,
+        "q2": q2,
+        "q3": q3,
+        "q4": q4,
         "total": total
-    })
+    }
 
-    st.markdown("---")
+st.markdown("---")
 
 # --- Submit Forecast ---
 if st.button("✅ Submit Forecast"):
@@ -100,12 +99,13 @@ if st.button("✅ Submit Forecast"):
     elif not st.session_state.product_entries:
         st.error("Please add at least one product forecast row.")
     else:
-        # Save submission to a CSV file
+        # Convert entries to DataFrame
         submission_df = pd.DataFrame(st.session_state.product_entries)
+        submission_df["Country"] = country
+        submission_df["Company"] = company
 
+        # Save locally
         file_path = "forecast_submissions.csv"
-
-        # If file exists, append; otherwise, create new
         if os.path.exists(file_path):
             existing = pd.read_csv(file_path)
             updated = pd.concat([existing, submission_df], ignore_index=True)
@@ -113,7 +113,20 @@ if st.button("✅ Submit Forecast"):
         else:
             submission_df.to_csv(file_path, index=False)
 
-        # Clear session entries
-        st.session_state.product_entries = []
+        # Save to Google Sheet
+        for _, entry in submission_df.iterrows():
+            sheet.append_row([
+                entry["Country"],
+                entry["Company"],
+                entry["group"],
+                entry["name"],
+                entry["q1"],
+                entry["q2"],
+                entry["q3"],
+                entry["q4"],
+                entry["total"]
+            ])
 
+        # Clear state
+        st.session_state.product_entries = []
         st.success("✅ Forecast submitted successfully! Thank you.")
