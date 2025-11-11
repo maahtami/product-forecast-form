@@ -3,6 +3,7 @@ import pandas as pd
 import os
 import gspread
 from google.oauth2.service_account import Credentials
+from datetime import datetime
 
 # --- Google Sheets setup ---
 SHEET_NAME = "ProductForecast"
@@ -119,8 +120,9 @@ if st.button("✅ Submit Forecast"):
         # Save to Google Sheet
         for _, entry in submission_df.iterrows():
             sheet.append_row([
-                entry["Country"],
-                entry["Company"],
+                datetime.now().strftime("%Y-%m-%d %H:%M:%S"),  # Timestamp
+                country,
+                company,
                 entry["group"],
                 entry["name"],
                 entry["q1"],
