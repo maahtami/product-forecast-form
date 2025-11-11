@@ -35,7 +35,12 @@ countries = [
     "South Africa", "Netherland", "Kenya", "Sudan", "Bulgaria", "Other"
 ]
 
-country = st.selectbox("🌍 Select Country", countries)
+country_choice = st.selectbox("🌍 Select Country", countries)
+country = country_choice
+if country_choice == "Other":
+    country_other = st.text_input("✍️ Please type your country name")
+    if country_other.strip():
+        country = country_other.strip()
 
 # --- Company name ---
 company = st.text_input("🏢 Company Name")
@@ -52,6 +57,8 @@ if st.button("➕ Add Product Forecast Row"):
     st.session_state.product_entries.append({
         "group": None,
         "name": None,
+        "code": None,
+        "description": None,
         "q1": 0, "q2": 0, "q3": 0, "q4": 0,
         "total": 0
     })
@@ -74,9 +81,15 @@ for i, entry in enumerate(st.session_state.product_entries):
             key=f"name_{i}"
         )
 
-    desc = filtered_df.loc[filtered_df["Product Name"] == name, "Description"].values[0]
-    st.caption(f"**Description:** {desc}")
+    # Retrieve product details
+    details_row = filtered_df.loc[filtered_df["Product Name"] == name].iloc[0]
+    product_code = details_row["PRODUCT CODE"]
+    description = details_row["Description"]
 
+    # Show details to the user
+    st.caption(f"**Code:** {product_code}  •  **Details:** {description}")
+
+    # Quantity inputs
     q1 = st.number_input(f"Q1 Quantity {i+1}", min_value=0, key=f"q1_{i}")
     q2 = st.number_input(f"Q2 Quantity {i+1}", min_value=0, key=f"q2_{i}")
     q3 = st.number_input(f"Q3 Quantity {i+1}", min_value=0, key=f"q3_{i}")
@@ -87,6 +100,8 @@ for i, entry in enumerate(st.session_state.product_entries):
     st.session_state.product_entries[i] = {
         "group": group,
         "name": name,
+        "code": product_code,
+        "description": description,
         "q1": q1,
         "q2": q2,
         "q3": q3,
@@ -117,6 +132,14 @@ if st.button("✅ Submit Forecast"):
         else:
             submission_df.to_csv(file_path, index=False)
 
+        # Ensure Google Sheet headers exist
+        if len(sheet.get_all_values()) == 0:
+            sheet.append_row([
+                "Timestamp", "Country", "Company Name",
+                "Product Group", "Product Name", "Product Code", "Description",
+                "Q1", "Q2", "Q3", "Q4", "Total"
+            ])
+
         # Save to Google Sheet
         for _, entry in submission_df.iterrows():
             sheet.append_row([
@@ -125,11 +148,13 @@ if st.button("✅ Submit Forecast"):
                 company,
                 entry["group"],
                 entry["name"],
-                entry["q1"],
-                entry["q2"],
-                entry["q3"],
-                entry["q4"],
-                entry["total"]
+                entry["code"],
+                entry["description"],
+                int(entry["q1"]),
+                int(entry["q2"]),
+                int(entry["q3"]),
+                int(entry["q4"]),
+                int(entry["total"])
             ])
 
         # Clear state
