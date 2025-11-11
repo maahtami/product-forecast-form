@@ -4,6 +4,7 @@ import os
 import gspread
 from google.oauth2.service_account import Credentials
 from datetime import datetime
+from PIL import Image
 
 # --- Google Sheets setup ---
 SHEET_NAME = "ProductForecast"
@@ -17,9 +18,23 @@ creds = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPE
 client = gspread.authorize(creds)
 sheet = client.open(SHEET_NAME).sheet1  # first worksheet
 
+
 # --- Streamlit page setup ---
 st.set_page_config(page_title="Product Forecast Form", layout="centered")
+
+st.markdown(
+    """
+    <div style="text-align: center;">
+        <img src="logo.png" width="180">
+        <h1>📊 Product Forecast Form</h1>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
 st.title("📊 Product Forecast Form")
+
+
 
 # --- Load product data ---
 @st.cache_data
