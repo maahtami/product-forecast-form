@@ -5,7 +5,7 @@ import gspread
 from google.oauth2.service_account import Credentials
 
 # --- Google Sheets setup ---
-SHEET_NAME = "Product Forecast Data"
+SHEET_NAME = "Product Forecast Submissions"
 SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets",
     "https://www.googleapis.com/auth/drive"
