@@ -5,6 +5,7 @@ import gspread
 from google.oauth2.service_account import Credentials
 from datetime import datetime
 from PIL import Image
+import base64
 
 # --- Google Sheets setup ---
 SHEET_NAME = "ProductForecast"
@@ -21,19 +22,24 @@ sheet = client.open(SHEET_NAME).sheet1  # first worksheet
 # --- Streamlit page setup ---
 st.set_page_config(page_title="Product Forecast Form", layout="centered")
 
+# --- Load and encode logo as base64 ---
+def get_base64_image(image_path):
+    with open(image_path, "rb") as img_file:
+        return base64.b64encode(img_file.read()).decode()
+
+logo_base64 = get_base64_image("logo.png")
+
 # --- Custom logo and header ---
 st.markdown(
-    """
-    <div style="text-align: center; padding: 10px; background-color: #1E1E1E; border-radius: 10px;">
-        <img src="logo.png" width="180" style="margin-bottom:10px;">
+    f"""
+    <div style="text-align: center; padding: 15px; background-color: #1E1E1E; border-radius: 12px;">
+        <img src="data:image/png;base64,{logo_base64}" width="160" style="margin-bottom:10px;">
         <h1 style="color: white;">📊 Product Forecast Form</h1>
+        <p style="color: #CCCCCC; margin-top:-10px;">Nephrocan Forecast Portal</p>
     </div>
     """,
     unsafe_allow_html=True
 )
-
-
-
 
 # --- Load product data ---
 @st.cache_data
