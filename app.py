@@ -5,7 +5,8 @@ import gspread
 from google.oauth2.service_account import Credentials
 from datetime import datetime
 import base64
-import uuid  # For user ID generation
+import uuid
+import pycountry  # to list all countries dynamically
 
 # --- Google Sheets setup ---
 SHEET_NAME = "ProductForecast"
@@ -41,11 +42,9 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# --- Generate unique user ID ---
+# --- Generate unique user ID (hidden) ---
 if "user_id" not in st.session_state:
-    st.session_state.user_id = str(uuid.uuid4())[:8]  # short random code like 'a93f4c21'
-
-st.markdown(f"🆔 **Your Session User ID:** `{st.session_state.user_id}`")
+    st.session_state.user_id = str(uuid.uuid4())[:8]
 
 # --- Load product data ---
 @st.cache_data
@@ -54,12 +53,8 @@ def load_data():
 
 df = load_data()
 
-# --- Country selection ---
-countries = [
-    "Kyrgyzstan", "Morocco", "Romania", "Bangladesh", "Ukraine", "Maldives",
-    "Germany", "Greece", "Lebanon", "Tanzania", "Botswana", "Syria",
-    "South Africa", "Netherland", "Kenya", "Sudan", "Bulgaria", "Other"
-]
+# --- Country selection (dynamic global list) ---
+countries = sorted([country.name for country in pycountry.countries]) + ["Other"]
 
 country_choice = st.selectbox("🌍 Select Country", countries)
 country = country_choice
@@ -71,8 +66,6 @@ if country_choice == "Other":
 # --- User Info ---
 st.markdown("### 👤 User Information")
 email = st.text_input("📧 Enter Your Email Address")
-
-# --- Company name ---
 company = st.text_input("🏢 Company Name")
 
 st.markdown("---")
@@ -119,15 +112,13 @@ for i, entry in enumerate(st.session_state.product_entries):
     product_code = details_row["PRODUCT CODE"]
     description = details_row["Description"]
 
-    # Show details to the user
     st.caption(f"**Code:** {product_code}  •  **Details:** {description}")
 
-    # Monthly quantity inputs
+    # Monthly inputs
     months = [
         "January", "February", "March", "April", "May", "June",
         "July", "August", "September", "October", "November", "December"
     ]
-
     monthly_quantities = {}
     total = 0
     cols = st.columns(3)
@@ -139,7 +130,6 @@ for i, entry in enumerate(st.session_state.product_entries):
 
     st.write(f"**Total:** {total}")
 
-    # Save entry
     st.session_state.product_entries[i] = {
         "group": group,
         "name": name,
@@ -160,7 +150,6 @@ if st.button("✅ Submit Forecast"):
     elif not st.session_state.product_entries:
         st.error("Please add at least one product forecast row.")
     else:
-        # Convert entries to DataFrame
         submission_df = pd.DataFrame(st.session_state.product_entries)
         submission_df["User ID"] = st.session_state.user_id
         submission_df["Email"] = email
@@ -186,7 +175,7 @@ if st.button("✅ Submit Forecast"):
                 "Total"
             ])
 
-        # Save to Google Sheet
+        # Upload to Google Sheets
         for _, entry in submission_df.iterrows():
             sheet.append_row([
                 datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -213,7 +202,6 @@ if st.button("✅ Submit Forecast"):
                 int(entry["total"])
             ])
 
-        # Clear state
         st.session_state.product_entries = []
         st.success("✅ Forecast submitted successfully! Thank you.")
         st.balloons()
