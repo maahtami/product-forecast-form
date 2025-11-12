@@ -4,8 +4,8 @@ import os
 import gspread
 from google.oauth2.service_account import Credentials
 from datetime import datetime
-from PIL import Image
 import base64
+import uuid  # For user ID generation
 
 # --- Google Sheets setup ---
 SHEET_NAME = "ProductForecast"
@@ -29,7 +29,7 @@ def get_base64_image(image_path):
 
 logo_base64 = get_base64_image("logo.png")
 
-# --- Custom logo and header ---
+# --- Custom header with logo ---
 st.markdown(
     f"""
     <div style="text-align: center; padding: 15px; background-color: #1E1E1E; border-radius: 12px;">
@@ -40,6 +40,12 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
+# --- Generate unique user ID ---
+if "user_id" not in st.session_state:
+    st.session_state.user_id = str(uuid.uuid4())[:8]  # short random code like 'a93f4c21'
+
+st.markdown(f"🆔 **Your Session User ID:** `{st.session_state.user_id}`")
 
 # --- Load product data ---
 @st.cache_data
@@ -62,6 +68,10 @@ if country_choice == "Other":
     if country_other.strip():
         country = country_other.strip()
 
+# --- User Info ---
+st.markdown("### 👤 User Information")
+email = st.text_input("📧 Enter Your Email Address")
+
 # --- Company name ---
 company = st.text_input("🏢 Company Name")
 
@@ -79,7 +89,10 @@ if st.button("➕ Add Product Forecast Row"):
         "name": None,
         "code": None,
         "description": None,
-        "q1": 0, "q2": 0, "q3": 0, "q4": 0,
+        **{month: 0 for month in [
+            "January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"
+        ]},
         "total": 0
     })
 
@@ -109,23 +122,30 @@ for i, entry in enumerate(st.session_state.product_entries):
     # Show details to the user
     st.caption(f"**Code:** {product_code}  •  **Details:** {description}")
 
-    # Quantity inputs
-    q1 = st.number_input(f"Q1 Quantity {i+1}", min_value=0, key=f"q1_{i}")
-    q2 = st.number_input(f"Q2 Quantity {i+1}", min_value=0, key=f"q2_{i}")
-    q3 = st.number_input(f"Q3 Quantity {i+1}", min_value=0, key=f"q3_{i}")
-    q4 = st.number_input(f"Q4 Quantity {i+1}", min_value=0, key=f"q4_{i}")
-    total = q1 + q2 + q3 + q4
+    # Monthly quantity inputs
+    months = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+    ]
+
+    monthly_quantities = {}
+    total = 0
+    cols = st.columns(3)
+    for idx, month in enumerate(months):
+        with cols[idx % 3]:
+            qty = st.number_input(f"{month} {i+1}", min_value=0, key=f"{month}_{i}")
+            monthly_quantities[month] = qty
+            total += qty
+
     st.write(f"**Total:** {total}")
 
+    # Save entry
     st.session_state.product_entries[i] = {
         "group": group,
         "name": name,
         "code": product_code,
         "description": description,
-        "q1": q1,
-        "q2": q2,
-        "q3": q3,
-        "q4": q4,
+        **monthly_quantities,
         "total": total
     }
 
@@ -133,13 +153,17 @@ st.markdown("---")
 
 # --- Submit Forecast ---
 if st.button("✅ Submit Forecast"):
-    if not company:
+    if not email.strip():
+        st.error("Please enter your email before submitting.")
+    elif not company:
         st.error("Please enter a company name before submitting.")
     elif not st.session_state.product_entries:
         st.error("Please add at least one product forecast row.")
     else:
         # Convert entries to DataFrame
         submission_df = pd.DataFrame(st.session_state.product_entries)
+        submission_df["User ID"] = st.session_state.user_id
+        submission_df["Email"] = email
         submission_df["Country"] = country
         submission_df["Company"] = company
 
@@ -155,28 +179,41 @@ if st.button("✅ Submit Forecast"):
         # Ensure Google Sheet headers exist
         if len(sheet.get_all_values()) == 0:
             sheet.append_row([
-                "Timestamp", "Country", "Company Name",
+                "Timestamp", "User ID", "Email", "Country", "Company Name",
                 "Product Group", "Product Name", "Product Code", "Description",
-                "Q1", "Q2", "Q3", "Q4", "Total"
+                "January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December",
+                "Total"
             ])
 
         # Save to Google Sheet
         for _, entry in submission_df.iterrows():
             sheet.append_row([
-                datetime.now().strftime("%Y-%m-%d %H:%M:%S"),  # Timestamp
+                datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                entry["User ID"],
+                entry["Email"],
                 country,
                 company,
                 entry["group"],
                 entry["name"],
                 entry["code"],
                 entry["description"],
-                int(entry["q1"]),
-                int(entry["q2"]),
-                int(entry["q3"]),
-                int(entry["q4"]),
+                int(entry["January"]),
+                int(entry["February"]),
+                int(entry["March"]),
+                int(entry["April"]),
+                int(entry["May"]),
+                int(entry["June"]),
+                int(entry["July"]),
+                int(entry["August"]),
+                int(entry["September"]),
+                int(entry["October"]),
+                int(entry["November"]),
+                int(entry["December"]),
                 int(entry["total"])
             ])
 
         # Clear state
         st.session_state.product_entries = []
         st.success("✅ Forecast submitted successfully! Thank you.")
+        st.balloons()
