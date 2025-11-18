@@ -23,47 +23,12 @@ sheet = client.open(SHEET_NAME).sheet1  # first worksheet
 # --- Streamlit page setup ---
 st.set_page_config(page_title="Product Forecast Form", layout="centered")
 
-# --- Load Montserrat font and change background and text colors ---
-st.markdown("""
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap');
-        
-        body {
-            font-family: 'Montserrat', sans-serif;
-            background-color: white;
-            color: black;
-        }
-        
-        h1, h2, h3, h4, h5, h6 {
-            color: #A6192E;  /* Using the provided red color */
-        }
-
-        .stButton>button {
-            background-color: #A6192E;
-            color: white;
-            font-size: 18px;
-        }
-
-        .stTextInput>div>div>input {
-            background-color: #f0f0f0;
-        }
-    </style>
-""", unsafe_allow_html=True)
-
-# --- Load and encode logo as base64 ---
-def get_base64_image(image_path):
-    with open(image_path, "rb") as img_file:
-        return base64.b64encode(img_file.read()).decode()
-
-logo_base64 = get_base64_image("logo.png")
-
-# --- Custom header with logo ---
+# --- Custom header with plain text (no emojis) and black font color ---
 st.markdown(
-    f"""
-    <div style="text-align: center; padding: 15px; background-color: #1E1E1E; border-radius: 12px;">
-        <img src="data:image/png;base64,{logo_base64}" width="160" style="margin-bottom:10px;">
-        <h1 style="color: white;">📊 Product Forecast Form</h1>
-        <p style="color: #CCCCCC; margin-top:-10px;">Nephrocan Forecast Portal</p>
+    """
+    <div style="text-align: center; padding: 15px; background-color: white; border-radius: 12px;">
+        <h1 style="color: black; font-family: 'Montserrat', sans-serif;">Product Forecast Form</h1>
+        <p style="color: black; margin-top:-10px; font-family: 'Montserrat', sans-serif;">Nephrocan Forecast Portal</p>
     </div>
     """,
     unsafe_allow_html=True
@@ -83,27 +48,27 @@ df = load_data()
 # --- Country selection (dynamic global list) ---
 countries = sorted([country.name for country in pycountry.countries]) + ["Other"]
 
-country_choice = st.selectbox("🌍 Select Country", countries)
+country_choice = st.selectbox("Select Country", countries)
 country = country_choice
 if country_choice == "Other":
-    country_other = st.text_input("✍️ Please type your country name")
+    country_other = st.text_input("Please type your country name")
     if country_other.strip():
         country = country_other.strip()
 
 # --- User Info ---
-st.markdown("### 👤 User Information")
-email = st.text_input("📧 Enter Your Email Address")
-company = st.text_input("🏢 Company Name")
+st.markdown("### User Information")
+email = st.text_input("Enter Your Email Address")
+company = st.text_input("Company Name")
 
 st.markdown("---")
-st.subheader("🧾 Product Forecast")
+st.subheader("Product Forecast")
 
 # --- Initialize session state ---
 if "product_entries" not in st.session_state:
     st.session_state.product_entries = []
 
 # --- Add forecast row button ---
-if st.button("➕ Add Product Forecast Row"):
+if st.button("Add Product Forecast Row"):
     st.session_state.product_entries.append({
         "group": None,
         "name": None,
@@ -169,7 +134,7 @@ for i, entry in enumerate(st.session_state.product_entries):
 st.markdown("---")
 
 # --- Submit Forecast ---
-if st.button("✅ Submit Forecast"):
+if st.button("Submit Forecast"):
     if not email.strip():
         st.error("Please enter your email before submitting.")
     elif not company:
