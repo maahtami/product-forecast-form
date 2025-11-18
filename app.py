@@ -119,7 +119,6 @@ for i, entry in enumerate(st.session_state.product_entries):
             product_groups,  # Filtered list with no "nan" values
             key=f"group_{i}"
         )
-        )
     with col2:
         filtered_df = df[df["Product Group"] == group]
         name = st.selectbox(
