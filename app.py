@@ -8,6 +8,19 @@ import base64
 import uuid
 import pycountry  # to list all countries dynamically
 
+# --- Add Google Font (Montserrat) ---
+st.markdown(
+    """
+    <style>
+    @import url('https://fonts.google.com/specimen/Montserrat?preview.text=Whereas%20recognition%20of%20the%20inherent%20dignity');
+    body {
+        font-family: 'Montserrat', sans-serif;
+        color: black;  /* Ensures black text color throughout */
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 # --- Google Sheets setup ---
 SHEET_NAME = "ProductForecast"
 SCOPES = [
@@ -30,7 +43,7 @@ def get_base64_image(image_path):
 
 logo_base64 = get_base64_image("logo.png")
 
-# --- Custom header with logo and black font color ---
+# --- Custom header with logo and white background ---
 st.markdown(
     f"""
     <div style="text-align: center; padding: 15px; background-color: white; border-radius: 12px;">
