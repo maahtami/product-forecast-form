@@ -1,64 +1,18 @@
 ﻿Product Group,Product Name,PRODUCT CODE,Description
-DIALYZER,NephroPS10E,4210215,"NephroPS10E- Polysulfone Hemodialyzer 1.0 m2, Low Flux, Sterilized by EO"
-DIALYZER,NephroPS10S,4210216,"NephroPS10S- Polysulfone Hemodialyzer 1.0 m2, Low Flux, Sterilized by Steam"
 DIALYZER,NephroPS10R,4210217,"NephroPS10R- Polysulfone Hemodialyzer 1.0 m2, Low Flux, Sterilized by Gamma"
-DIALYZER,NephroPS13E,4210220,"NephroPS13E- Polysulfone Hemodialyzer 1.3 m2, Low Flux, Sterilized by EO"
-DIALYZER,NephroPS13S,4210221,"NephroPS13S- Polysulfone Hemodialyzer, 1.3 m2, Low Flux, Sterilized by Steam"
 DIALYZER,NephroPS13R,4210222,"NephroPS13R- Polysulfone Hemodialyzer 1.3 m2, Low Flux, Sterilized by Gamma"
-DIALYZER,NephroPS14E,4210245,"NephroPS14E- Polysulfone Hemodialyzer 1.4 m2, Low Flux, Sterilized by EO"
-DIALYZER,NephroPS14S,4210246,"NephroPS14S- Polysulfone Hemodialyzer 1.4 m2, Low Flux, Sterilized by Steam"
 DIALYZER,NephroPS14R,4210247,"NephroPS14R- Polysulfone Hemodialyzer 1.4 m2, Low Flux, Sterilized by Gamma"
-DIALYZER,NephroPS16E,4210225,"NephroPS16E- Polysulfone Hemodialyzer 1.6 m2, Low Flux, Sterilized by EO"
-DIALYZER,NephroPS16S,4210226,"NephroPS16S- Polysulfone Hemodialyzer 1.6 m2, Low Flux, Sterilized by Steam"
 DIALYZER,NephroPS16R,4210227,"NephroPS16R- Polysulfone Hemodialyzer 1.6 m2, Low Flux, Sterilized by Gamma"
-DIALYZER,NephroPS18E,4210230,"NephroPS18E- Polysulfone Hemodialyzer 1.8 m2, Low Flux, Sterilized by EO"
-DIALYZER,NephroPS18S,4210231,"NephroPS18S- Polysulfone Hemodialyzer 1.8 m2, Low Flux, Sterilized by Steam"
 DIALYZER,NephroPS18R,4210232,"NephroPS18R- Polysulfone Hemodialyzer 1.8 m2, Low Flux, Sterilized by Gamma"
-DIALYZER,NephroPS20E,4210235,"NephroPS20E- Polysulfone Hemodialyzer 2.0 m2, Low Flux, Sterilized by EO"
-DIALYZER,NephroPS20S,4210236,"NephroPS20S- Polysulfone Hemodialyzer 2.0 m2, Low Flux, Sterilized by Steam"
 DIALYZER,NephroPS20R,4210237,"NephroPS20R- Polysulfone Hemodialyzer 2.0 m2, Low Flux, Sterilized by Gamma"
-DIALYZER,NephroPS22E,4210240,"NephroPS22E- Polysulfone Hemodialyzer 2.2 m2, Low Flux, Sterilized by EO"
-DIALYZER,NephroPS22S,4210241,"NephroPS22S- Polysulfone Hemodialyzer 2.2 m2, Low Flux, Sterilized by Steam"
 DIALYZER,NephroPS22R,4210242,"NephroPS22R- Polysulfone Hemodialyzer 2.2 m2, Low Flux, Sterilized by Gamma"
-DIALYZER,NephroPS100E,4210255,"NephroPS100E- Polysulfone Hemodialyzer 1.0 m2, High Flux, Sterilized by EO"
-DIALYZER,NephroPS100S,4210256,"NephroPS100S- Polysulfone Hemodialyzer 1.0 m2, High Flux, Sterilized by Steam"
 DIALYZER,NephroPS100R,4210257,"NephroPS100R- Polysulfone Hemodialyzer 1.0 m2, High Flux, Sterilized by Gamma"
-DIALYZER,NephroPS130E,4210260,"NephroPS130E- Polysulfone Hemodialyzer 1.3 m2, High Flux, Sterilized by EO"
-DIALYZER,NephroPS130S,4210261,"NephroPS130S- Polysulfone Hemodialyzer 1.3 m2, High Flux, Sterilized by Steam"
 DIALYZER,NephroPS130R,4210262,"NephroPS130R- Polysulfone Hemodialyzer 1.3 m2, High Flux, Sterilized by Gamma"
-DIALYZER,NephroPS140E,4210285,"NephroPS140E- Polysulfone Hemodialyzer 1.4 m2, High Flux, Sterilized by EO"
-DIALYZER,NephroPS140S,4210286,"NephroPS140S- Polysulfone Hemodialyzer 1.4 m2, High Flux, Sterilized by Steam"
 DIALYZER,NephroPS140R,4210287,"NephroPS140R- Polysulfone Hemodialyzer 1.4 m2, High Flux, Sterilized by Gamma"
-DIALYZER,NephroPS160E,4210265,"NephroPS160E- Polysulfone Hemodialyzer 1.6 m2, High Flux, Sterilized by EO"
-DIALYZER,NephroPS160S,4210266,"NephroPS160S- Polysulfone Hemodialyzer 1.6 m2, High Flux, Sterilized by Steam"
 DIALYZER,NephroPS160R,4210267,"NephroPS160R- Polysulfone Hemodialyzer 1.6 m2, High Flux, Sterilized by Gamma"
-DIALYZER,NephroPS180E,4210270,"NephroPS180E- Polysulfone Hemodialyzer 1.8 m2, High Flux, Sterilized by EO"
-DIALYZER,NephroPS180S,4210271,"NephroPS180S- Polysulfone Hemodialyzer 1.8 m2, High Flux, Sterilized by Steam"
 DIALYZER,NephroPS180R,4210272,"NephroPS180R- Polysulfone Hemodialyzer 1.8 m2, High Flux, Sterilized by Gamma"
-DIALYZER,NephroPS200E,4210275,"NephroPS200E- Polysulfone Hemodialyzer 2.0 m2, High Flux, Sterilized by EO"
-DIALYZER,NephroPS200S,4210276,"NephroPS200S- Polysulfone Hemodialyzer 2.0 m2, High Flux, Sterilized by Steam"
 DIALYZER,NephroPS200R,4210277,"NephroPS200R- Polysulfone Hemodialyzer 2.0 m2, High Flux, Sterilized by Gamma"
-DIALYZER,NephroPS220E,4210280,"NephroPS220E- Polysulfone Hemodialyzer 2.2 m2, High Flux, Sterilized by EO"
-DIALYZER,NephroPS220S,4210281,"NephroPS220S- Polysulfone Hemodialyzer 2.2 m2, High Flux, Sterilized by Steam"
 DIALYZER,NephroPS220R,4210282,"NephroPS220R- Polysulfone Hemodialyzer 2.2 m2, High Flux, Sterilized by Gamma"
-DIALYZER,NephroPES10E,4210315,"NephroPES10E- Polyethersulfone Hemodialyzer 1.0 m2, Low Flux, Sterilized by EO"
-DIALYZER,NephroPES10R,4210317,"NephroPES10R- Polyethersulfone Hemodialyzer 1.0 m2, Low Flux, Sterilized by Gamma"
-DIALYZER,NephroPES13E,4210320,"NephroPES13E- Polyethersulfone Hemodialyzer 1.3 m2, Low Flux, Sterilized by EO"
-DIALYZER,NephroPES13R,4210322,"NephroPES13R- Polyethersulfone Hemodialyzer 1.3 m2, Low Flux, Sterilized by Gamma"
-DIALYZER,NephroPES16E,4210325,"NephroPES16E- Polyethersulfone Hemodialyzer 1.6 m2, Low Flux, Sterilized by EO"
-DIALYZER,NephroPES16R,4210327,"NephroPES16R- Polyethersulfone Hemodialyzer 1.6 m2, Low Flux, Sterilized by Gamma"
-DIALYZER,NephroPES18E,4210330,"NephroPES18E- Polyethersulfone Hemodialyzer 1.8 m2, Low Flux, Sterilized by EO"
-DIALYZER,NephroPES18R,4210332,"NephroPES18R- Polyethersulfone Hemodialyzer 1.8 m2, Low Flux, Sterilized by Gamma"
-DIALYZER,NephroPES20E,4210335,"NephroPES20E- Polyethersulfone Hemodialyzer 2.0 m2, Low Flux, Sterilized by EO"
-DIALYZER,NephroPES20R,4210337,"NephroPES20R- Polyethersulfone Hemodialyzer 2.0 m2, Low Flux, Sterilized by Gamma"
-DIALYZER,NephroPES130E,4210360,"NephroPES130E- Polyethersulfone Hemodialyzer 1.3 m2, High Flux, Sterilized by EO"
-DIALYZER,NephroPES130R,4210362,"NephroPES130R- Polyethersulfone Hemodialyzer 1.3 m2, High Flux, Sterilized by Gamma"
-DIALYZER,NephroPES160E,4210365,"NephroPES160E- Polyethersulfone Hemodialyzer 1.6 m2, High Flux, Sterilized by EO"
-DIALYZER,NephroPES160R,4210367,"NephroPES160R- Polyethersulfone Hemodialyzer 1.6 m2, High Flux, Sterilized by Gamma"
-DIALYZER,NephroPES180E,4210370,"NephroPES180E- Polyethersulfone Hemodialyzer 1.8 m2, High Flux, Sterilized by EO"
-DIALYZER,NephroPES180R,4210372,"NephroPES180R- Polyethersulfone Hemodialyzer 1.8 m2, High Flux, Sterilized by Gamma"
-DIALYZER,NephroPES200E,4210375,"NephroPES200E- Polyethersulfone Hemodialyzer 2.0 m2, High Flux, Sterilized by EO"
-DIALYZER,NephroPES200R,4210377,"NephroPES200R- Polyethersulfone Hemodialyzer 2.0 m2, High Flux, Sterilized by Gamma"
 BLOODLINE,NephroLineU,4212205,"NephroLineU, Universal Model, without Drain Bag -ETO Sterilized, DEHP Contain"
 BLOODLINE,NephroLineU,4212220,"NephroLineU, Universal Model, without Drain Bag -ETO Sterilized, DEHP Free"
 BLOODLINE,NephroLineU,4212223,"NephroLineU, Universal Model, without Drain Bag -Gamma Sterilized, DEHP Free"
@@ -78,10 +32,6 @@ BLOODLINE,NephroLineF ,4212708,"NephroLineF, Fresenius Model, without Drain Bag,
 BLOODLINE,NephroLineF+B,4212705,"NephroLineF+B, Fresenius Model, with Drain Bag -ETO Sterilized, DEHP Contain"
 BLOODLINE,NephroLineF+B,4212720,"NephroLineF+B, Fresenius Model, with Drain Bag -ETO Sterilized, DEHP Free"
 BLOODLINE,NephroLineF+B,4212723,"NephroLineF+B, Fresenius Model, with Drain Bag -Gamma Sterilized, DEHP Free"
-BLOODLINE,NephroLineN ,4213320,"NephroLineN, Nippro Model, with Spike and without Drain Bag -ETO Sterilized, DEHP Free"
-BLOODLINE,NephroLineN ,4213323,"NephroLineN, Nippro Model, with Spike and without Drain Bag -Gamma Sterilized, DEHP Free"
-BLOODLINE,NephroLineK+B,4213420,"NephroLineK+B, Nikkiso Model, with Drain Bag -ETO Sterilized, DEHP Free"
-BLOODLINE,NephroLineK+B,4213423,"NephroLineK+B, Nikkiso Model, with Drain Bag -Gamma Sterilized, DEHP Free"
 NEEDLE,NephroNeedle15ASE,4218304,"NephroNeedle15ASE, Fistula Needle, Arterial Line, 15G (1.8 * 25 mm) 150 mm, Sterilized with EO"
 NEEDLE,NephroNeedle15VSE,4218307,"NephroNeedle15VSE, Fistula Needle, Venous line, 15G (1.8 * 25 mm) 150 mm, Sterilized with EO"
 NEEDLE,NephroNeedle15AVSE,4218310,"NephroNeedle15AVSE, Fistula Needle Set, Arterial+ Venous Line, 15G (1.8 * 25 mm) 150 mm, Sterilized with EO"
@@ -118,10 +68,8 @@ NEEDLE,NephroNeedle17AVLE,4218530,"NephroNeedle17AVLE, Fistula Needle, Arterial+
 NEEDLE,NephroNeedle17ALR,4218534,"NephroNeedle17ALR, Fistula Needle, Arterial Line, 17G (1.4 * 25 mm) 300 mm, Sterilized with Gamma"
 NEEDLE,NephroNeedle17VLR,4218537,"NephroNeedle17VLR, Fistula Needle, Venous line, 17G (1.4 * 25 mm) 300 mm, Sterilized with Gamma"
 NEEDLE,NephroNeedle17AVLR,4218540,"NephroNeedle17AVLR, Fistula Needle, Arterial+ Venous Line, 17G (1.4 * 25 mm) 300 mm, Sterilized with Gamma"
-POWDER,NephroBag550,4315210,"NephroBag550 , Sodium Bicarbonate Bag 550 gr"
 POWDER,NephroBag650,4315220,"NephroBag650, Sodium Bicarbonate Bag 650 gr"
 POWDER,NephroBag750,4315230,"NephroBag750, Sodium Bicarbonate Bag 750 gr"
-POWDER,NephroCart550,4315310,"NephroCart550, Sodium Bicarbonate Cartridge 550 gr"
 POWDER,NephroCart650,4315320,"NephroCart650, Sodium Bicarbonate Cartridge 650 gr"
 POWDER,NephroCart750,4315330,"NephroCart750, Sodium Bicarbonate Cartridge 750 gr"
 MACHINERY,NephroCRO - NCS1,4620110,"NephroCRO - NCS1, Single pass RO machine for hemodialysis application. This model has a membrane"
@@ -174,3 +122,55 @@ BLOODLINE,NephroLineN N001,4213320,"NephroLine N, Nippro Model, with spike and w
 BLOODLINE,NephroLineN N002,4213330,"NephroLine N, Nippro Model, with Spike and without Drain Bag, Gamma Sterilized, DEHP Free (N002)"
 BLOODLINE,NephroLineK+B K001,4213420,"NephroLine K+B, Nikkiso Model, with Drain Bag, EO sterilized, DEHP Free (K001)"
 BLOODLINE,NephroLineK+B K002,4213430,"NephroLine K+B, Nikkiso Model, with Drain Bag, Gamma Sterilized, DEHP Free (K002)"
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
