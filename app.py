@@ -106,19 +106,18 @@ if st.button("Add Product Forecast Row"):
 for i, entry in enumerate(st.session_state.product_entries):
     st.markdown(f"#### Product {i+1}")
     col1, col2 = st.columns(2)
-    # --- Product Group selection ---
-    # Remove any NaN values and ensure unique entries
-    product_groups = df["Product Group"].dropna().unique().tolist()
 
-    # Optionally add "Other" option at the end of the list
-    product_groups.append("Other")
+    # --- Product Group selection ---
+    # Directly specify the allowed product groups
+    product_groups = ["Dialyzer", "Bloodline", "Powder", "Needle", "Machinery"]
 
     with col1:
         group = st.selectbox(
             f"Product Group {i+1}",
-            product_groups,  # Filtered list with no "nan" values
+            product_groups,  # List of specific product groups
             key=f"group_{i}"
         )
+
     with col2:
         filtered_df = df[df["Product Group"] == group]
         name = st.selectbox(
