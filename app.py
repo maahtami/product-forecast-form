@@ -23,10 +23,18 @@ sheet = client.open(SHEET_NAME).sheet1  # first worksheet
 # --- Streamlit page setup ---
 st.set_page_config(page_title="Product Forecast Form", layout="centered")
 
-# --- Custom header with plain text (no emojis) and black font color ---
+# --- Load and encode logo as base64 ---
+def get_base64_image(image_path):
+    with open(image_path, "rb") as img_file:
+        return base64.b64encode(img_file.read()).decode()
+
+logo_base64 = get_base64_image("logo.png")
+
+# --- Custom header with logo and black font color ---
 st.markdown(
-    """
+    f"""
     <div style="text-align: center; padding: 15px; background-color: white; border-radius: 12px;">
+        <img src="data:image/png;base64,{logo_base64}" width="160" style="margin-bottom:10px;">
         <h1 style="color: black; font-family: 'Montserrat', sans-serif;">Product Forecast Form</h1>
         <p style="color: black; margin-top:-10px; font-family: 'Montserrat', sans-serif;">Nephrocan Forecast Portal</p>
     </div>
