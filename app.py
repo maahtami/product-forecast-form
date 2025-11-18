@@ -23,6 +23,33 @@ sheet = client.open(SHEET_NAME).sheet1  # first worksheet
 # --- Streamlit page setup ---
 st.set_page_config(page_title="Product Forecast Form", layout="centered")
 
+# --- Load Montserrat font and change background and text colors ---
+st.markdown("""
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap');
+        
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: white;
+            color: black;
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+            color: #A6192E;  /* Using the provided red color */
+        }
+
+        .stButton>button {
+            background-color: #A6192E;
+            color: white;
+            font-size: 18px;
+        }
+
+        .stTextInput>div>div>input {
+            background-color: #f0f0f0;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
 # --- Load and encode logo as base64 ---
 def get_base64_image(image_path):
     with open(image_path, "rb") as img_file:
