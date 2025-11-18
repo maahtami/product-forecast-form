@@ -119,44 +119,51 @@ for i, entry in enumerate(st.session_state.product_entries):
         )
 
     with col2:
+        # Filter data based on selected group
         filtered_df = df[df["Product Group"] == group]
-        name = st.selectbox(
-            f"Product Name {i+1}",
-            filtered_df["Product Name"].unique(),
-            key=f"name_{i}"
-        )
+        # Check if there are products under the selected group
+        if not filtered_df.empty:
+            name = st.selectbox(
+                f"Product Name {i+1}",
+                filtered_df["Product Name"].unique(),
+                key=f"name_{i}"
+            )
 
-    # Retrieve product details
-    details_row = filtered_df.loc[filtered_df["Product Name"] == name].iloc[0]
-    product_code = details_row["PRODUCT CODE"]
-    description = details_row["Description"]
+            # Retrieve product details
+            details_row = filtered_df.loc[filtered_df["Product Name"] == name].iloc[0]
+            product_code = details_row["PRODUCT CODE"]
+            description = details_row["Description"]
 
-    st.caption(f"**Code:** {product_code}  •  **Details:** {description}")
+            st.caption(f"**Code:** {product_code}  •  **Details:** {description}")
 
-    # Monthly inputs
-    months = [
-        "January", "February", "March", "April", "May", "June",
-        "July", "August", "September", "October", "November", "December"
-    ]
-    monthly_quantities = {}
-    total = 0
-    cols = st.columns(3)
-    for idx, month in enumerate(months):
-        with cols[idx % 3]:
-            qty = st.number_input(f"{month} {i+1}", min_value=0, key=f"{month}_{i}")
-            monthly_quantities[month] = qty
-            total += qty
+            # Monthly inputs
+            months = [
+                "January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"
+            ]
+            monthly_quantities = {}
+            total = 0
+            cols = st.columns(3)
+            for idx, month in enumerate(months):
+                with cols[idx % 3]:
+                    qty = st.number_input(f"{month} {i+1}", min_value=0, key=f"{month}_{i}")
+                    monthly_quantities[month] = qty
+                    total += qty
 
-    st.write(f"**Total:** {total}")
+            st.write(f"**Total:** {total}")
 
-    st.session_state.product_entries[i] = {
-        "group": group,
-        "name": name,
-        "code": product_code,
-        "description": description,
-        **monthly_quantities,
-        "total": total
-    }
+            st.session_state.product_entries[i] = {
+                "group": group,
+                "name": name,
+                "code": product_code,
+                "description": description,
+                **monthly_quantities,
+                "total": total
+            }
+
+        else:
+            # Handle the case where no products exist for the selected group
+            st.warning(f"No products available for the selected group: {group}")
 
 st.markdown("---")
 
