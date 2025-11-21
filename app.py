@@ -106,55 +106,83 @@ if st.button("Add Product Forecast Row"):
 for i, entry in enumerate(st.session_state.product_entries):
     st.markdown(f"#### Product {i+1}")
     col1, col2 = st.columns(2)
-    
-    # --- Product Group selection ---
-    # Retrieve unique product groups and remove "nan"
-    product_groups = df["Product Group"].unique()
-    product_groups = [group for group in product_groups if str(group) != 'nan']  # Remove "nan" entries
-    
+
+    # ----- PRODUCT GROUP -----
+    product_groups = [g for g in df["Product Group"].unique() if str(g) != "nan"]
+
     with col1:
         group = st.selectbox(
             f"Product Group {i+1}",
-            product_groups,  # Updated list without "nan"
+            product_groups,
             key=f"group_{i}"
         )
-    
+
+    # Filter based on selected group
+    filtered_df = df[df["Product Group"] == group]
+
+    # Create lists for dropdowns
+    product_names = filtered_df["Product Name"].unique().tolist()
+    product_details = filtered_df["Description"].unique().tolist()
+
+    # ----- PRODUCT NAME -----
     with col2:
-        filtered_df = df[df["Product Group"] == group]
-        name = st.selectbox(
+        selected_name = st.selectbox(
             f"Product Name {i+1}",
-            filtered_df["Product Name"].unique(),
+            product_names,
             key=f"name_{i}"
         )
 
-    # Retrieve product details
-    details_row = filtered_df.loc[filtered_df["Product Name"] == name].iloc[0]
-    product_code = details_row["PRODUCT CODE"]
-    description = details_row["Description"]
+    # ----- PRODUCT DETAIL (LARGE DROPDOWN) -----
+    selected_detail = st.selectbox(
+        f"Product Detail {i+1}",
+        product_details,
+        key=f"detail_{i}",
+        help="Choose detailed product description"
+    )
 
-    st.caption(f"**Code:** {product_code}  •  **Details:** {description}")
+    # ----- SYNC LOGIC -----
 
-    # Monthly inputs
+    # If name chosen → update detail
+    row_by_name = filtered_df[filtered_df["Product Name"] == selected_name]
+    if not row_by_name.empty:
+        selected_detail = row_by_name["Description"].values[0]
+
+    # If detail chosen → update name
+    row_by_detail = filtered_df[filtered_df["Description"] == selected_detail]
+    if not row_by_detail.empty:
+        selected_name = row_by_detail["Product Name"].values[0]
+
+    # ----- HIDDEN PRODUCT CODE (NOT SHOWN TO USER) -----
+    product_code = row_by_detail["PRODUCT CODE"].values[0]
+
+    # ----- MONTHLY INPUTS -----
     months = [
         "January", "February", "March", "April", "May", "June",
         "July", "August", "September", "October", "November", "December"
     ]
+
     monthly_quantities = {}
     total = 0
     cols = st.columns(3)
+
     for idx, month in enumerate(months):
         with cols[idx % 3]:
-            qty = st.number_input(f"{month} {i+1}", min_value=0, key=f"{month}_{i}")
+            qty = st.number_input(
+                f"{month} {i+1}",
+                min_value=0,
+                key=f"{month}_{i}"
+            )
             monthly_quantities[month] = qty
             total += qty
 
     st.write(f"**Total:** {total}")
 
+    # ----- SAVE TO SESSION STATE -----
     st.session_state.product_entries[i] = {
         "group": group,
-        "name": name,
-        "code": product_code,
-        "description": description,
+        "name": selected_name,
+        "detail": selected_detail,
+        "code": product_code,   # hidden but saved
         **monthly_quantities,
         "total": total
     }
