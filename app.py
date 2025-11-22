@@ -240,7 +240,7 @@ def render_form_page():
 
         # Switch to review page
         st.session_state.page = "review"
-        st.experimental_rerun()
+        st.rerun()
 
 
 # -------------------------------------------------
