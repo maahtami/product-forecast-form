@@ -111,17 +111,17 @@ def render_form_page():
     # ----- COUNTRY -----
     countries = sorted([c.name for c in pycountry.countries]) + ["Other"]
     country_choice = st.selectbox("Select Country", countries, key="country_choice")
-    country = country_choice
+
     if country_choice == "Other":
-        country_other = st.text_input("Please type your country name", key="country_other")
-        if country_other.strip():
-            country = country_other.strip()
-    st.session_state.country = country
+        st.session_state.country = st.text_input("Please type your country name", key="country_manual")
+    else:
+        st.session_state.country = country_choice
+
 
     # ----- USER INFO -----
     st.markdown("### User Information")
-    email = st.text_input("Enter Your Email Address", key="email")
-    company = st.text_input("Company Name", key="company")
+    st.session_state.email = st.text_input("Enter Your Email Address", key="email")
+    st.session_state.company = st.text_input("Company Name", key="company")
 
     st.markdown("---")
     st.subheader("Product Forecast")
@@ -268,16 +268,9 @@ def render_form_page():
     st.markdown("---")
 
     # ----- REVIEW BUTTON -----
-    if st.button("Review Forecast", key="review_button"):
-        if not email.strip():
-            st.error("Please enter your email before reviewing.")
-        elif not company.strip():
-            st.error("Please enter a company name before reviewing.")
-        elif not st.session_state.product_entries:
-            st.error("Please add at least one product forecast row.")
-        else:
-            st.session_state.page = "review"
-            st.rerun()
+    if st.button("Back to edit forecast"):
+    st.session_state.page = "form"
+    st.rerun()
 
 
 # ------------------------------------------------------------------
