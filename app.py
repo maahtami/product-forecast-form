@@ -17,13 +17,63 @@ st.set_page_config(page_title="Product Forecast Form", layout="centered")
 # ---------------------------------------------------
 # GOOGLE FONT (Montserrat)
 # ---------------------------------------------------
+# ---------------------------------------------------
+# FORCE LIGHT THEME + MONTSERRAT
+# ---------------------------------------------------
 st.markdown("""
 <style>
+
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600&display=swap');
-html, body, div, input, select, textarea {
-    font-family: 'Montserrat', sans-serif;
+
+html, body, [data-testid="stAppViewContainer"], [data-testid="stApp"], 
+[data-testid="stHeader"], [data-testid="stToolbar"] {
+    background-color: #FFFFFF !important;
+    color: #000000 !important;
+    font-family: 'Montserrat', sans-serif !important;
+}
+
+/* All text */
+h1, h2, h3, h4, h5, h6, p, label, span, div, th, td {
+    color: #000000 !important;
+    font-family: 'Montserrat', sans-serif !important;
+}
+
+/* Input fields */
+input, select, textarea {
+    background-color: #FFFFFF !important;
+    color: #000000 !important;
+    border: 1px solid #CCCCCC !important;
+}
+
+/* Dropdown menus */
+[data-baseweb="select"] {
+    background-color: #FFFFFF !important;
+    color: #000000 !important;
+}
+
+/* Buttons override */
+button, .stButton > button {
+    background-color: #A6192E !important;   /* Nephrocan Red */
+    color: white !important;
+    border-radius: 6px;
+    padding: 6px 18px;
+    border: none;
+}
+button:hover {
+    background-color: #7F1223 !important;
+}
+
+/* Table */
+[data-testid="stTable"] {
+    background-color: white !important;
     color: black !important;
 }
+
+/* Remove dark mode shadow overlay */
+.css-1dp5vir, .e1f1d6gn4 {
+    background-color: white !important;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
