@@ -25,53 +25,36 @@ st.markdown("""
 
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600&display=swap');
 
-html, body, [data-testid="stAppViewContainer"], [data-testid="stApp"], 
-[data-testid="stHeader"], [data-testid="stToolbar"] {
-    background-color: #FFFFFF !important;
-    color: #000000 !important;
-    font-family: 'Montserrat', sans-serif !important;
+/* Apply Montserrat everywhere */
+html, body, [class*="css"] {
+    font-family: 'Montserrat', sans-serif;
 }
 
-/* All text */
-h1, h2, h3, h4, h5, h6, p, label, span, div, th, td {
-    color: #000000 !important;
-    font-family: 'Montserrat', sans-serif !important;
+/* Do NOT force background or text color — allow dark/light mode */
+body {
+    background: transparent !important;
+    color: inherit !important;
 }
 
-/* Input fields */
-input, select, textarea {
-    background-color: #FFFFFF !important;
-    color: #000000 !important;
-    border: 1px solid #CCCCCC !important;
-}
-
-/* Dropdown menus */
-[data-baseweb="select"] {
-    background-color: #FFFFFF !important;
-    color: #000000 !important;
-}
-
-/* Buttons override */
+/* Buttons: Nephrocan Red */
 button, .stButton > button {
-    background-color: #A6192E !important;   /* Nephrocan Red */
+    background-color: #A6192E !important;
     color: white !important;
-    border-radius: 6px;
-    padding: 6px 18px;
-    border: none;
-}
-button:hover {
-    background-color: #7F1223 !important;
+    border-radius: 6px !important;
+    padding: 0.5rem 1rem !important;
 }
 
-/* Table */
-[data-testid="stTable"] {
-    background-color: white !important;
-    color: black !important;
+/* Center header content */
+.nephro-header {
+    text-align: center;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 25px;
 }
 
-/* Remove dark mode shadow overlay */
-.css-1dp5vir, .e1f1d6gn4 {
-    background-color: white !important;
+/* Light/dark mode adaptive box */
+[data-baseweb="block"] {
+    background: none !important;
 }
 
 </style>
