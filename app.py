@@ -269,8 +269,8 @@ def render_form_page():
 
     # ----- REVIEW BUTTON -----
     if st.button("Back to edit forecast"):
-    st.session_state.page = "form"
-    st.rerun()
+        st.session_state.page = "form"
+        st.rerun()
 
 
 # ------------------------------------------------------------------
