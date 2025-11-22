@@ -6,42 +6,50 @@ from google.oauth2.service_account import Credentials
 from datetime import datetime
 import base64
 import uuid
-import pycountry  # to list all countries dynamically
-import io  # for Excel export
+import pycountry
+from io import BytesIO
 
-# -------------------------------------------------
-#   PAGE & THEME SETUP
-# -------------------------------------------------
+# ------------------------------------------------------------------
+# BASIC PAGE CONFIG
+# ------------------------------------------------------------------
 st.set_page_config(page_title="Product Forecast Form", layout="centered")
 
-# --- Add Google Font (Montserrat) ---
+# ------------------------------------------------------------------
+# GLOBAL STYLE (Montserrat + button color)
+# ------------------------------------------------------------------
 st.markdown(
     """
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
 
-    html, body, [class*="css"]  {
-        font-family: 'Montserrat', sans-serif;
-        color: black;
-        background-color: white;
+    html, body, [class*="css"] {
+        font-family: 'Montserrat', sans-serif !important;
     }
 
-    /* Make Streamlit main background white */
-    .stApp {
-        background-color: white;
+    /* NephroCan red buttons */
+    .stButton>button {
+        background-color: #A6192E !important;
+        color: white !important;
+        border-radius: 6px !important;
+        border: none !important;
+        font-weight: 500 !important;
+        padding: 0.4rem 1.2rem !important;
+    }
+    .stButton>button:hover {
+        opacity: 0.9 !important;
     }
     </style>
     """,
-    unsafe_allow_html=True
+    unsafe_allow_html=True,
 )
 
-# -------------------------------------------------
-#   GOOGLE SHEETS SETUP
-# -------------------------------------------------
+# ------------------------------------------------------------------
+# GOOGLE SHEETS SETUP
+# ------------------------------------------------------------------
 SHEET_NAME = "ProductForecast"
 SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets",
-    "https://www.googleapis.com/auth/drive"
+    "https://www.googleapis.com/auth/drive",
 ]
 SERVICE_ACCOUNT_FILE = "service_account.json"
 
@@ -49,29 +57,41 @@ creds = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPE
 client = gspread.authorize(creds)
 sheet = client.open(SHEET_NAME).sheet1  # first worksheet
 
-# -------------------------------------------------
-#   HEADER WITH LOGO
-# -------------------------------------------------
+# ------------------------------------------------------------------
+# LOAD LOGO
+# ------------------------------------------------------------------
 def get_base64_image(image_path: str) -> str:
     with open(image_path, "rb") as img_file:
         return base64.b64encode(img_file.read()).decode()
 
+
 logo_base64 = get_base64_image("logo.png")
 
-st.markdown(
-    f"""
-    <div style="text-align: center; padding: 15px; background-color: white; border-radius: 12px;">
-        <img src="data:image/png;base64,{logo_base64}" width="160" style="margin-bottom:10px;">
-        <h1 style="color: black; font-family: 'Montserrat', sans-serif;">Product Forecast Form</h1>
-        <p style="color: black; margin-top:-10px; font-family: 'Montserrat', sans-serif;">Nephrocan Forecast Portal</p>
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+def render_header(title: str = "Product Forecast Form"):
+    st.markdown(
+        f"""
+        <div style="text-align: center; padding: 15px; background-color: white; border-radius: 12px; margin-bottom: 25px;">
+            <img src="data:image/png;base64,{logo_base64}" width="160" style="margin-bottom:10px;">
+            <h1 style="color: black;">{title}</h1>
+            <p style="color: black; margin-top:-10px;">Nephrocan Forecast Portal</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
-# -------------------------------------------------
-#   SESSION STATE INIT
-# -------------------------------------------------
+# ------------------------------------------------------------------
+# LOAD PRODUCT DATA
+# ------------------------------------------------------------------
+@st.cache_data
+def load_data():
+    return pd.read_csv("product list.csv")
+
+
+df = load_data()
+
+# ------------------------------------------------------------------
+# INITIALISE SESSION STATE
+# ------------------------------------------------------------------
 if "user_id" not in st.session_state:
     st.session_state.user_id = str(uuid.uuid4())[:8]
 
@@ -79,270 +99,281 @@ if "product_entries" not in st.session_state:
     st.session_state.product_entries = []
 
 if "page" not in st.session_state:
-    st.session_state.page = "form"   # "form" or "review"
+    st.session_state.page = "form"  # "form" or "review"
 
-if "review_df" not in st.session_state:
-    st.session_state.review_df = None
 
-# -------------------------------------------------
-#   DATA LOAD
-# -------------------------------------------------
-@st.cache_data
-def load_data():
-    return pd.read_csv("product list.csv")
-
-df = load_data()
-
-# Precompute clean product group list (no NaN)
-PRODUCT_GROUPS = [g for g in df["Product Group"].unique() if str(g) != "nan"]
-
-# Global months list
-MONTHS = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
-]
-
-# -------------------------------------------------
-#   FORM PAGE
-# -------------------------------------------------
+# ------------------------------------------------------------------
+# FORM PAGE
+# ------------------------------------------------------------------
 def render_form_page():
-    # --- Country selection (dynamic global list) ---
-    countries = sorted([country.name for country in pycountry.countries]) + ["Other"]
+    render_header("Product Forecast Form")
 
-    country_choice = st.selectbox("Select Country", countries)
+    # ----- COUNTRY -----
+    countries = sorted([c.name for c in pycountry.countries]) + ["Other"]
+    country_choice = st.selectbox("Select Country", countries, key="country_choice")
     country = country_choice
     if country_choice == "Other":
-        country_other = st.text_input("Please type your country name")
+        country_other = st.text_input("Please type your country name", key="country_other")
         if country_other.strip():
             country = country_other.strip()
+    st.session_state.country = country
 
-    # --- User Info ---
+    # ----- USER INFO -----
     st.markdown("### User Information")
-    email = st.text_input("Enter Your Email Address")
-    company = st.text_input("Company Name")
+    email = st.text_input("Enter Your Email Address", key="email")
+    company = st.text_input("Company Name", key="company")
 
     st.markdown("---")
     st.subheader("Product Forecast")
 
-    # --- Add forecast row button ---
-    if st.button("Add Product Forecast Row"):
-        st.session_state.product_entries.append({
-            "group": None,
-            "name": None,
-            "description": None,
-            "code": None,
-            **{month: 0 for month in MONTHS},
-            "total": 0
-        })
+    # ----- ADD ROW BUTTON -----
+    if st.button("Add Product Forecast Row", key="add_row"):
+        st.session_state.product_entries.append(
+            {
+                "group": None,
+                "name": None,
+                "detail": None,
+                "code": None,
+                **{
+                    month: 0
+                    for month in [
+                        "January",
+                        "February",
+                        "March",
+                        "April",
+                        "May",
+                        "June",
+                        "July",
+                        "August",
+                        "September",
+                        "October",
+                        "November",
+                        "December",
+                    ]
+                },
+                "total": 0,
+            }
+        )
 
-    # --- Display product rows ---
+    # ----- DISPLAY PRODUCT ROWS -----
     for i, entry in enumerate(st.session_state.product_entries):
         st.markdown(f"#### Product {i+1}")
+
         col1, col2 = st.columns(2)
 
-        # ----- PRODUCT GROUP -----
+        # PRODUCT GROUP OPTIONS (no NaN)
+        product_groups = [g for g in df["Product Group"].unique() if str(g) != "nan"]
+
         with col1:
             group = st.selectbox(
                 f"Product Group {i+1}",
-                PRODUCT_GROUPS,
-                key=f"group_{i}"
+                product_groups,
+                key=f"group_{i}",
             )
 
-        # Filter based on selected group
         filtered_df = df[df["Product Group"] == group]
 
-        # Create lists for dropdowns
-        product_names = filtered_df["Product Name"].unique().tolist()
-        product_details = filtered_df["Description"].unique().tolist()
+        names = filtered_df["Product Name"].tolist()
+        details = filtered_df["Description"].tolist()
 
-        # ----- PRODUCT NAME -----
+        # Default state for this row
+        if f"name_{i}" not in st.session_state:
+            st.session_state[f"name_{i}"] = names[0]
+        if f"detail_{i}" not in st.session_state:
+            st.session_state[f"detail_{i}"] = details[0]
+        if f"code_{i}" not in st.session_state:
+            st.session_state[f"code_{i}"] = filtered_df.iloc[0]["PRODUCT CODE"]
+
+        # --- callbacks to sync name & detail ---
+        def on_name_change(row_index=i, df_filtered=filtered_df):
+            selected_name = st.session_state[f"name_{row_index}"]
+            row = df_filtered[df_filtered["Product Name"] == selected_name]
+            if not row.empty:
+                st.session_state[f"detail_{row_index}"] = row["Description"].values[0]
+                st.session_state[f"code_{row_index}"] = row["PRODUCT CODE"].values[0]
+                st.rerun()
+
+        def on_detail_change(row_index=i, df_filtered=filtered_df):
+            selected_detail = st.session_state[f"detail_{row_index}"]
+            row = df_filtered[df_filtered["Description"] == selected_detail]
+            if not row.empty:
+                st.session_state[f"name_{row_index}"] = row["Product Name"].values[0]
+                st.session_state[f"code_{row_index}"] = row["PRODUCT CODE"].values[0]
+                st.rerun()
+
         with col2:
-            name_choice = st.selectbox(
+            st.selectbox(
                 f"Product Name {i+1}",
-                product_names,
-                key=f"name_{i}"
+                names,
+                key=f"name_{i}",
+                on_change=on_name_change,
             )
 
-        # ----- PRODUCT DETAIL (LONG DROPDOWN UNDER NAME) -----
-        detail_choice = st.selectbox(
+        # Large dropdown for details
+        st.selectbox(
             f"Product Detail {i+1}",
-            product_details,
+            details,
             key=f"detail_{i}",
-            help="Choose detailed product description"
+            on_change=on_detail_change,
+            help="Choose detailed product description",
         )
 
-        # ----- LOGIC FOR FINAL ROW SELECTION -----
-        # Priority: if detail selected → take row by detail; else by name
-        row_by_detail = filtered_df[filtered_df["Description"] == detail_choice]
-        if not row_by_detail.empty:
-            final_row = row_by_detail.iloc[0]
-        else:
-            final_row = filtered_df[filtered_df["Product Name"] == name_choice].iloc[0]
-
-        final_name = final_row["Product Name"]
-        final_detail = final_row["Description"]
-        final_code = final_row["PRODUCT CODE"]   # hidden from user
-
-        # We do NOT show the product code on form (per your request)
-        # We show only description under the dropdowns
-        st.caption(f"Details: {final_detail}")
+        # Final values after any sync
+        selected_name = st.session_state[f"name_{i}"]
+        selected_detail = st.session_state[f"detail_{i}"]
+        product_code = st.session_state[f"code_{i}"]  # hidden from user
 
         # ----- MONTHLY INPUTS -----
+        months = [
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December",
+        ]
+
         monthly_quantities = {}
         total = 0
-        cols_month = st.columns(3)
+        cols = st.columns(3)
 
-        for idx, month in enumerate(MONTHS):
-            with cols_month[idx % 3]:
+        for idx, month in enumerate(months):
+            with cols[idx % 3]:
                 qty = st.number_input(
                     f"{month} {i+1}",
                     min_value=0,
-                    key=f"{month}_{i}"
+                    key=f"{month}_{i}",
                 )
                 monthly_quantities[month] = qty
                 total += qty
 
-        st.write(f"Total: {total}")
+        st.write(f"**Total:** {total}")
 
-        # ----- SAVE TO SESSION STATE -----
+        # Save this row into session state
         st.session_state.product_entries[i] = {
             "group": group,
-            "name": final_name,
-            "description": final_detail,
-            "code": final_code,   # hidden but saved
+            "name": selected_name,
+            "detail": selected_detail,
+            "code": product_code,
             **monthly_quantities,
-            "total": total
+            "total": total,
         }
 
     st.markdown("---")
 
-    # --- REVIEW FORECAST BUTTON ---
-    if st.button("Review Forecast"):
-        # Basic validations before going to review page
+    # ----- REVIEW BUTTON -----
+    if st.button("Review Forecast", key="review_button"):
         if not email.strip():
             st.error("Please enter your email before reviewing.")
-            return
-        if not company.strip():
+        elif not company.strip():
             st.error("Please enter a company name before reviewing.")
-            return
-        if not st.session_state.product_entries:
+        elif not st.session_state.product_entries:
             st.error("Please add at least one product forecast row.")
-            return
-
-        # Build dataframe and store in session_state
-        submission_df = pd.DataFrame(st.session_state.product_entries)
-
-        # Store meta info separately in session_state
-        st.session_state.review_df = submission_df
-        st.session_state.review_email = email
-        st.session_state.review_company = company
-        st.session_state.review_country = country
-
-        # Switch to review page
-        st.session_state.page = "review"
-        st.rerun()
+        else:
+            st.session_state.page = "review"
+            st.rerun()
 
 
-# -------------------------------------------------
-#   REVIEW PAGE
-# -------------------------------------------------
+# ------------------------------------------------------------------
+# REVIEW PAGE
+# ------------------------------------------------------------------
 def render_review_page():
-    st.markdown("## Review Your Forecast")
+    render_header("Review Your Forecast")
 
-    # Ensure we have a review dataframe
-    if st.session_state.review_df is None or st.session_state.review_df.empty:
-        st.warning("No data available to review. Please go back and fill the form.")
-        if st.button("Back to Edit"):
+    country = st.session_state.get("country", "")
+    company = st.session_state.get("company", "")
+    email = st.session_state.get("email", "")
+
+    st.markdown(f"**Country:** {country}")
+    st.markdown(f"**Company:** {company}")
+    st.markdown(f"**Email:** {email}")
+
+    st.write("")
+    entries = st.session_state.product_entries
+
+    if not entries:
+        st.warning("There are no forecast entries to review.")
+        if st.button("Back to edit forecast"):
             st.session_state.page = "form"
-            st.experimental_rerun()
+            st.rerun()
         return
 
-    review_df = st.session_state.review_df.copy()
+    review_df = pd.DataFrame(entries)
 
-    # Build a user-facing table
-    display_cols = (
-        ["group", "name", "description"]
-        + MONTHS
-        + ["total"]
+    display_cols = [
+        "group",
+        "name",
+        "detail",
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",
+        "total",
+    ]
+
+    pretty_df = review_df[display_cols].rename(
+        columns={
+            "group": "Product Group",
+            "name": "Product Name",
+            "detail": "Product Description",
+            "total": "Total",
+        }
     )
 
-    # Safety: only keep columns that exist
-    display_cols = [c for c in display_cols if c in review_df.columns]
+    st.write("")
+    st.dataframe(pretty_df, use_container_width=True)
 
-    display_df = review_df[display_cols].rename(columns={
-        "group": "Product Group",
-        "name": "Product Name",
-        "description": "Product Description",
-        "total": "Total"
-    })
+    # ----- DOWNLOAD AS EXCEL -----
+    st.write("")
+    buffer = BytesIO()
+    try:
+        with pd.ExcelWriter(buffer, engine="xlsxwriter") as writer:
+            pretty_df.to_excel(writer, index=False, sheet_name="Forecast")
+        buffer.seek(0)
 
-    # Styled table (grey header, simple grid)
-    styled = (
-        display_df.style
-        .set_table_styles(
-            [
-                {
-                    "selector": "th",
-                    "props": [
-                        ("background-color", "#f0f0f0"),
-                        ("color", "black"),
-                        ("font-weight", "600"),
-                        ("border", "1px solid #d0d0d0"),
-                        ("padding", "6px")
-                    ]
-                },
-                {
-                    "selector": "td",
-                    "props": [
-                        ("border", "1px solid #e0e0e0"),
-                        ("padding", "6px")
-                    ]
-                }
-            ]
+        st.download_button(
+            label="Download Forecast as Excel",
+            data=buffer,
+            file_name="product_forecast.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
-    )
+    except ModuleNotFoundError:
+        st.error(
+            "Excel export is not available because the 'xlsxwriter' package is not installed "
+            "on the server. Please install it with 'pip install xlsxwriter'."
+        )
 
-    st.write("**Country:**", st.session_state.review_country)
-    st.write("**Company:**", st.session_state.review_company)
-    st.write("**Email:**", st.session_state.review_email)
+    st.write("")
+    col1, col2 = st.columns(2)
 
-    st.write("")  # spacing
-    st.write(styled)
-
-    st.write("")  # spacing
-
-    # --------- DOWNLOAD AS EXCEL ----------
-    buffer = io.BytesIO()
-    excel_df = display_df.copy()
-    with pd.ExcelWriter(buffer, engine="xlsxwriter") as writer:
-        excel_df.to_excel(writer, index=False, sheet_name="Forecast")
-    buffer.seek(0)
-
-    st.download_button(
-        label="Download Forecast as Excel",
-        data=buffer,
-        file_name="forecast_review.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    )
-
-    st.write("")  # spacing
-
-    # --------- ACTION BUTTONS ----------
-    col_back, col_submit = st.columns(2)
-
-    with col_back:
-        if st.button("Back to Edit"):
+    # ----- BACK BUTTON -----
+    with col1:
+        if st.button("Back to edit forecast"):
             st.session_state.page = "form"
-            st.experimental_rerun()
+            st.rerun()
 
-    with col_submit:
+    # ----- SUBMIT BUTTON -----
+    with col2:
         if st.button("Submit Forecast"):
-            # Final submission to CSV and Google Sheet
-            submission_df = st.session_state.review_df.copy()
+            submission_df = review_df.copy()
             submission_df["User ID"] = st.session_state.user_id
-            submission_df["Email"] = st.session_state.review_email
-            submission_df["Country"] = st.session_state.review_country
-            submission_df["Company"] = st.session_state.review_company
+            submission_df["Email"] = email
+            submission_df["Country"] = country
+            submission_df["Company"] = company
 
             # Save locally
             file_path = "forecast_submissions.csv"
@@ -355,54 +386,70 @@ def render_review_page():
 
             # Ensure Google Sheet headers exist
             if len(sheet.get_all_values()) == 0:
-                sheet.append_row([
-                    "Timestamp", "User ID", "Email", "Country", "Company Name",
-                    "Product Group", "Product Name", "Product Code", "Description",
-                    "January", "February", "March", "April", "May", "June",
-                    "July", "August", "September", "October", "November", "December",
-                    "Total"
-                ])
+                sheet.append_row(
+                    [
+                        "Timestamp",
+                        "User ID",
+                        "Email",
+                        "Country",
+                        "Company Name",
+                        "Product Group",
+                        "Product Name",
+                        "Product Code",
+                        "Description",
+                        "January",
+                        "February",
+                        "March",
+                        "April",
+                        "May",
+                        "June",
+                        "July",
+                        "August",
+                        "September",
+                        "October",
+                        "November",
+                        "December",
+                        "Total",
+                    ]
+                )
 
-            # Upload to Google Sheets
+            # Upload rows to Google Sheets
             for _, entry in submission_df.iterrows():
-                sheet.append_row([
-                    datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                    entry.get("User ID", ""),
-                    entry.get("Email", ""),
-                    entry.get("Country", ""),
-                    entry.get("Company", ""),
-                    entry.get("group", ""),
-                    entry.get("name", ""),
-                    entry.get("code", ""),
-                    entry.get("description", ""),
-                    int(entry.get("January", 0)),
-                    int(entry.get("February", 0)),
-                    int(entry.get("March", 0)),
-                    int(entry.get("April", 0)),
-                    int(entry.get("May", 0)),
-                    int(entry.get("June", 0)),
-                    int(entry.get("July", 0)),
-                    int(entry.get("August", 0)),
-                    int(entry.get("September", 0)),
-                    int(entry.get("October", 0)),
-                    int(entry.get("November", 0)),
-                    int(entry.get("December", 0)),
-                    int(entry.get("total", 0)),
-                ])
+                sheet.append_row(
+                    [
+                        datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        entry["User ID"],
+                        entry["Email"],
+                        entry["Country"],
+                        entry["Company"],
+                        entry["group"],
+                        entry["name"],
+                        entry["code"],
+                        entry["detail"],
+                        int(entry["January"]),
+                        int(entry["February"]),
+                        int(entry["March"]),
+                        int(entry["April"]),
+                        int(entry["May"]),
+                        int(entry["June"]),
+                        int(entry["July"]),
+                        int(entry["August"]),
+                        int(entry["September"]),
+                        int(entry["October"]),
+                        int(entry["November"]),
+                        int(entry["December"]),
+                        int(entry["total"]),
+                    ]
+                )
 
-            # Reset state after submit
+            # Reset state
             st.session_state.product_entries = []
-            st.session_state.review_df = None
-            st.session_state.page = "form"
-
             st.success("Forecast submitted successfully. Thank you.")
-            st.balloons()
-            st.experimental_rerun()
 
 
-# -------------------------------------------------
-#   MAIN RENDER
-# -------------------------------------------------
+# ------------------------------------------------------------------
+# MAIN ROUTER
+# ------------------------------------------------------------------
 if st.session_state.page == "form":
     render_form_page()
 else:
