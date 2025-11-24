@@ -17,27 +17,27 @@ st.set_page_config(page_title="Product Forecast Form", layout="centered")
 # ---------------------------------------------------
 # GLOBAL CONSTANTS
 # ---------------------------------------------------
+NEPHRO_RED = "#A6192E"
+
 MONTH_LIST = [
     "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December"
 ]
 
-NEPHRO_RED = "#A6192E"
-
 # ---------------------------------------------------
-# GLOBAL STYLE (Montserrat + buttons)
+# FONT + BASIC STYLING (NO FORCED BACKGROUND)
 # ---------------------------------------------------
 st.markdown(
     f"""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600&display=swap');
 
-/* Apply Montserrat everywhere */
+/* Apply Montserrat */
 html, body, [class*="css"] {{
     font-family: 'Montserrat', sans-serif;
 }}
 
-/* Do NOT force background or text color — respect dark / light mode */
+/* Do NOT override background / text, respect dark or light mode */
 body {{
     background: transparent !important;
     color: inherit !important;
@@ -48,8 +48,15 @@ button, .stButton > button {{
     background-color: {NEPHRO_RED} !important;
     color: white !important;
     border-radius: 6px !important;
-    padding: 0.5rem 1rem !important;
+    padding: 0.5rem 1.0rem !important;
     border: none !important;
+}}
+
+/* Center header content */
+.nephro-header {{
+    text-align: center;
+    padding: 10px;
+    margin-bottom: 20px;
 }}
 </style>
 """,
@@ -84,34 +91,41 @@ logo_base64 = load_logo()
 # LOAD PRODUCT LIST
 # ---------------------------------------------------
 @st.cache_data
-def load_data() -> pd.DataFrame:
+def load_product_data():
     return pd.read_csv("product list.csv")
 
 
-df_products = load_data()
-df_products = df_products.dropna(subset=["Product Group"])
+df = load_product_data()
+df = df.dropna(subset=["Product Group"])  # ensure no NaN groups
+PRODUCT_GROUPS = sorted(df["Product Group"].unique().tolist())
 
 # ---------------------------------------------------
-# SESSION STATE INITIALISATION
+# SESSION STATE INITIALIZATION
 # ---------------------------------------------------
-if "page" not in st.session_state:
-    st.session_state.page = "form"      # "form" or "review"
+ss = st.session_state
 
-if "product_entries" not in st.session_state:
-    st.session_state.product_entries = []   # list of dicts
+if "page" not in ss:
+    ss.page = "form"  # "form" or "review"
 
-if "email" not in st.session_state:
-    st.session_state.email = ""
+if "product_entries" not in ss:
+    ss.product_entries = []  # list of dict rows
 
-if "company" not in st.session_state:
-    st.session_state.company = ""
+if "email" not in ss:
+    ss.email = ""
 
-if "country" not in st.session_state:
-    st.session_state.country = ""
+if "company" not in ss:
+    ss.company = ""
 
-if "locked_rows" not in st.session_state:
-    # number of rows whose group/name/detail are locked
-    st.session_state.locked_rows = 0
+if "country" not in ss:
+    ss.country = ""
+
+if "user_id" not in ss:
+    ss.user_id = str(uuid.uuid4())[:8]
+
+# Number of rows that are "locked" after first review
+# (0 means nothing locked yet)
+if "lock_rows" not in ss:
+    ss.lock_rows = 0
 
 # ---------------------------------------------------
 # HEADER
@@ -119,9 +133,9 @@ if "locked_rows" not in st.session_state:
 def render_header():
     st.markdown(
         f"""
-        <div style="text-align: center; padding: 10px; margin-bottom: 20px;">
+        <div class="nephro-header">
             <img src="data:image/png;base64,{logo_base64}" width="200" style="margin-bottom:5px;">
-            <p style="color:inherit; font-size:22px; font-weight:500; margin-top:5px;">
+            <p style="font-size:22px; font-weight:500; margin-top:5px;">
                 Nephrocan Forecast Portal
             </p>
         </div>
@@ -129,51 +143,48 @@ def render_header():
         unsafe_allow_html=True,
     )
 
-# ---------------------------------------------------
-# HELPERS
-# ---------------------------------------------------
-def ensure_entry_list_length():
-    """Make sure product_entries has at least one row when needed."""
-    if not st.session_state.product_entries:
-        st.session_state.product_entries.append(
-            {
-                "group": None,
-                "name": None,
-                "detail": None,
-                "code": None,
-                **{m: 0 for m in MONTH_LIST},
-                "total": 0,
-            }
-        )
 
-def get_filtered_df(group: str) -> pd.DataFrame:
-    return df_products[df_products["Product Group"] == group]
-
-def find_row_index(filtered: pd.DataFrame, entry: dict) -> int:
-    """
-    Choose the best matching row index for a given entry (by code, then name, then detail).
-    Returns an index from filtered.index.
-    """
+# ---------------------------------------------------
+# CALLBACKS FOR SYNCING NAME <-> DETAIL
+# ---------------------------------------------------
+def on_change_group(row_index: int):
+    """When group changes, pick first product in that group."""
+    group = ss.get(f"group_{row_index}")
+    filtered = df[df["Product Group"] == group]
     if filtered.empty:
-        raise ValueError("Filtered DataFrame is empty")
+        return
+    first = filtered.iloc[0]
+    ss[f"name_{row_index}"] = first["Product Name"]
+    ss[f"detail_{row_index}"] = first["Description"]
+    ss[f"code_{row_index}"] = first["PRODUCT CODE"]
 
-    # By product code first
-    if entry.get("code") in filtered["PRODUCT CODE"].values:
-        return filtered.index[filtered["PRODUCT CODE"] == entry["code"]][0]
 
-    # Then by product name
-    if entry.get("name") in filtered["Product Name"].values:
-        return filtered.index[filtered["Product Name"] == entry["name"]][0]
+def on_change_name(row_index: int):
+    """When name changes, update detail + code."""
+    group = ss.get(f"group_{row_index}")
+    name = ss.get(f"name_{row_index}")
+    filtered = df[(df["Product Group"] == group) & (df["Product Name"] == name)]
+    if filtered.empty:
+        return
+    row = filtered.iloc[0]
+    ss[f"detail_{row_index}"] = row["Description"]
+    ss[f"code_{row_index}"] = row["PRODUCT CODE"]
 
-    # Then by description
-    if entry.get("detail") in filtered["Description"].values:
-        return filtered.index[filtered["Description"] == entry["detail"]][0]
 
-    # Fallback: first row
-    return filtered.index[0]
+def on_change_detail(row_index: int):
+    """When detail changes, update name + code."""
+    group = ss.get(f"group_{row_index}")
+    detail = ss.get(f"detail_{row_index}")
+    filtered = df[(df["Product Group"] == group) & (df["Description"] == detail)]
+    if filtered.empty:
+        return
+    row = filtered.iloc[0]
+    ss[f"name_{row_index}"] = row["Product Name"]
+    ss[f"code_{row_index}"] = row["PRODUCT CODE"]
+
 
 # ---------------------------------------------------
-# PAGE 1 — FORM PAGE
+# FORM PAGE
 # ---------------------------------------------------
 def render_form_page():
     render_header()
@@ -184,54 +195,41 @@ def render_form_page():
     # COUNTRY
     # ----------------------
     countries = sorted([c.name for c in pycountry.countries]) + ["Other"]
-
-    current_country = (
-        st.session_state.country if st.session_state.country in countries else countries[0]
+    default_country_index = (
+        countries.index(ss.country) if ss.country in countries else 0
     )
-
     country_choice = st.selectbox(
         "Select Country",
         countries,
-        index=countries.index(current_country),
+        index=default_country_index,
     )
 
     if country_choice == "Other":
-        country_text = st.text_input(
+        ss.country = st.text_input(
             "Please type your country name",
-            st.session_state.country if st.session_state.country not in countries else "",
+            value=ss.country if ss.country not in countries else "",
         )
-        st.session_state.country = country_text.strip() or "Other"
     else:
-        st.session_state.country = country_choice
+        ss.country = country_choice
 
     # ----------------------
     # USER INFO
     # ----------------------
     st.markdown("### User Information")
-    st.session_state.email = st.text_input(
-        "Enter Your Email Address",
-        value=st.session_state.email,
-        key="email_input",
-    )
-    st.session_state.company = st.text_input(
-        "Company Name",
-        value=st.session_state.company,
-        key="company_input",
-    )
+    ss.email = st.text_input("Enter Your Email Address", value=ss.email)
+    ss.company = st.text_input("Company Name", value=ss.company)
 
     st.markdown("---")
     st.subheader("Product Forecast")
 
-    # Guarantee list exists (optional)
-    ensure_entry_list_length()
-
     # ----------------------
-    # ADD ROW BUTTON
+    # ADD ROW
     # ----------------------
     if st.button("Add Product Forecast Row"):
-        st.session_state.product_entries.append(
+        # New empty row – fully editable
+        ss.product_entries.append(
             {
-                "group": None,
+                "group": PRODUCT_GROUPS[0],
                 "name": None,
                 "detail": None,
                 "code": None,
@@ -241,141 +239,140 @@ def render_form_page():
         )
 
     # ----------------------
-    # PRODUCT ROWS
+    # RENDER ROWS
     # ----------------------
-    for i, entry in enumerate(st.session_state.product_entries):
-        st.markdown(f"#### Product {i + 1}")
+    for i, entry in enumerate(ss.product_entries):
+        st.markdown(f"#### Product {i+1}")
 
-        locked = i < st.session_state.locked_rows
+        is_locked = i < ss.lock_rows  # existing row after review
 
-        if locked:
-            # Existing row after review: lock group, name, detail
-            st.text(f"Product Group {i+1}: {entry.get('group', '')}")
-            st.text(f"Product Name {i+1}: {entry.get('name', '')}")
-            st.text(f"Product Detail {i+1}: {entry.get('detail', '')}")
-
-            # Use stored values for months
-            cols = st.columns(3)
-            total = 0
-            new_month_values = {}
-
-            for idx, m in enumerate(MONTH_LIST):
-                with cols[idx % 3]:
-                    qty = st.number_input(
-                        f"{m} ({i+1})",
-                        min_value=0,
-                        value=int(entry.get(m, 0)),
-                        key=f"{m}_{i}",
-                    )
-                    new_month_values[m] = qty
-                    total += qty
-
-            st.write(f"**Total: {total}**")
-
-            # Update only quantities and total
-            st.session_state.product_entries[i].update(
-                {**new_month_values, "total": total}
-            )
-
+        # ----- META (GROUP / NAME / DETAIL) -----
+        if is_locked:
+            # Locked – no widgets, only text display
+            st.write(f"**Product Group {i+1}:** {entry['group']}")
+            st.write(f"**Product Name {i+1}:** {entry['name']}")
+            st.write(f"**Product Detail {i+1}:** {entry['detail']}")
+            group = entry["group"]
+            name = entry["name"]
+            detail = entry["detail"]
+            code = entry["code"]
         else:
-            # Row is editable: group + linked name/detail
+            # Editable row
             col1, col2 = st.columns(2)
 
-            # --- Product Group dropdown ---
-            product_groups = sorted(df_products["Product Group"].unique().tolist())
-            current_group = entry["group"] if entry["group"] in product_groups else product_groups[0]
+            # --- Initialize session_state keys ONCE (before widgets) ---
+            # Group
+            if f"group_{i}" not in ss:
+                ss[f"group_{i}"] = entry.get("group") or PRODUCT_GROUPS[0]
+            group_value = ss[f"group_{i}"]
 
+            # Names + details for this group
+            filtered = df[df["Product Group"] == group_value]
+            if filtered.empty:
+                # Should not happen, but guard
+                names_for_group = []
+                details_for_group = []
+            else:
+                names_for_group = filtered["Product Name"].unique().tolist()
+                details_for_group = filtered["Description"].unique().tolist()
+
+            # Name
+            if f"name_{i}" not in ss:
+                if entry.get("name") and entry["name"] in names_for_group:
+                    ss[f"name_{i}"] = entry["name"]
+                elif names_for_group:
+                    ss[f"name_{i}"] = names_for_group[0]
+
+            # Detail
+            if f"detail_{i}" not in ss:
+                if entry.get("detail") and entry["detail"] in details_for_group:
+                    ss[f"detail_{i}"] = entry["detail"]
+                elif details_for_group:
+                    ss[f"detail_{i}"] = details_for_group[0]
+
+            # Code
+            if f"code_{i}" not in ss:
+                # try to find matching row for name+group
+                row_match = df[
+                    (df["Product Group"] == ss[f"group_{i}"])
+                    & (df["Product Name"] == ss[f"name_{i}"])
+                ]
+                if not row_match.empty:
+                    ss[f"code_{i}"] = row_match.iloc[0]["PRODUCT CODE"]
+                else:
+                    ss[f"code_{i}"] = entry.get("code")
+
+            # --- Widgets ---
             group = col1.selectbox(
                 f"Product Group {i+1}",
-                product_groups,
-                index=product_groups.index(current_group),
+                PRODUCT_GROUPS,
+                index=PRODUCT_GROUPS.index(ss[f"group_{i}"]),
                 key=f"group_{i}",
+                on_change=on_change_group,
+                args=(i,),
             )
 
-            filtered = get_filtered_df(group)
+            # Recompute filtered after potential group change
+            filtered = df[df["Product Group"] == group]
+            names_for_group = filtered["Product Name"].unique().tolist()
+            details_for_group = filtered["Description"].unique().tolist()
 
-            if filtered.empty:
-                st.warning("No products found for this group.")
-                continue
+            # Ensure selected name/detail are valid for this group
+            if ss[f"name_{i}"] not in names_for_group and names_for_group:
+                ss[f"name_{i}"] = names_for_group[0]
+            if ss[f"detail_{i}"] not in details_for_group and details_for_group:
+                ss[f"detail_{i}"] = details_for_group[0]
 
-            # All row indices in this group
-            option_indices = list(filtered.index)
-
-            # Choose default index based on entry
-            default_row_idx = find_row_index(filtered, entry)
-
-            # Canonical row index for this row
-            canonical_key = f"row_idx_{i}"
-            if canonical_key not in st.session_state:
-                st.session_state[canonical_key] = default_row_idx
-
-            prev_idx = st.session_state[canonical_key]
-            if prev_idx not in option_indices:
-                prev_idx = option_indices[0]
-                st.session_state[canonical_key] = prev_idx
-
-            # --- Name dropdown (options are row indices) ---
-            selected_idx_name = col2.selectbox(
+            name = col2.selectbox(
                 f"Product Name {i+1}",
-                option_indices,
-                index=option_indices.index(prev_idx),
-                key=f"name_idx_{i}",
-                format_func=lambda idx: filtered.loc[idx, "Product Name"],
+                names_for_group,
+                index=names_for_group.index(ss[f"name_{i}"]),
+                key=f"name_{i}",
+                on_change=on_change_name,
+                args=(i,),
             )
 
-            # --- Detail dropdown (also row indices, long text) ---
-            selected_idx_detail = st.selectbox(
+            detail = st.selectbox(
                 f"Product Detail {i+1}",
-                option_indices,
-                index=option_indices.index(prev_idx),
-                key=f"detail_idx_{i}",
-                format_func=lambda idx: filtered.loc[idx, "Description"],
+                details_for_group,
+                index=details_for_group.index(ss[f"detail_{i}"]),
+                key=f"detail_{i}",
+                on_change=on_change_detail,
+                args=(i,),
             )
 
-            # Decide which control changed
-            new_idx = prev_idx
-            if selected_idx_name != prev_idx:
-                new_idx = selected_idx_name
-            elif selected_idx_detail != prev_idx:
-                new_idx = selected_idx_detail
+            code = ss.get(f"code_{i}")
 
-            st.session_state[canonical_key] = new_idx
+        # ----- MONTH INPUTS (ALWAYS EDITABLE) -----
+        cols = st.columns(3)
+        total = 0
+        month_values = {}
 
-            # Use final row index
-            selected_row = filtered.loc[new_idx]
+        for idx, m in enumerate(MONTH_LIST):
+            key = f"{m}_{i}"
+            if key not in ss:
+                ss[key] = entry.get(m, 0) or 0
+            with cols[idx % 3]:
+                qty = st.number_input(
+                    f"{m} ({i+1})",
+                    min_value=0,
+                    value=ss[key],
+                    key=key,
+                )
+                month_values[m] = qty
+                total += qty
 
-            group_value = group
-            name_value = selected_row["Product Name"]
-            detail_value = selected_row["Description"]
-            code_value = selected_row["PRODUCT CODE"]
+        st.write(f"**Total: {total}**")
 
-            # MONTH INPUTS
-            cols = st.columns(3)
-            total = 0
-            new_month_values = {}
-
-            for idx, m in enumerate(MONTH_LIST):
-                with cols[idx % 3]:
-                    qty = st.number_input(
-                        f"{m} ({i+1})",
-                        min_value=0,
-                        value=int(entry.get(m, 0)),
-                        key=f"{m}_{i}",
-                    )
-                    new_month_values[m] = qty
-                    total += qty
-
-            st.write(f"**Total: {total}**")
-
-            # Save whole entry back
-            st.session_state.product_entries[i] = {
-                "group": group_value,
-                "name": name_value,
-                "detail": detail_value,
-                "code": code_value,
-                **new_month_values,
-                "total": total,
-            }
+        # ----- UPDATE product_entries WITH CURRENT STATE -----
+        ss.product_entries[i] = {
+            "group": group,
+            "name": name,
+            "detail": detail,
+            "code": code,
+            **month_values,
+            "total": total,
+        }
 
     st.markdown("---")
 
@@ -383,34 +380,35 @@ def render_form_page():
     # REVIEW BUTTON
     # ----------------------
     if st.button("Review Forecast"):
-        # First basic validation
-        if not st.session_state.email.strip():
+        if not ss.email.strip():
             st.error("Please enter your email before reviewing.")
-            return
-        if not st.session_state.company.strip():
+        elif not ss.company.strip():
             st.error("Please enter a company name before reviewing.")
-            return
-        if not st.session_state.product_entries:
-            st.error("Please add at least one product forecast row before reviewing.")
-            return
+        elif not ss.product_entries:
+            st.error("Please add at least one product forecast row.")
+        else:
+            # First time going to review: lock current rows
+            if ss.lock_rows == 0:
+                ss.lock_rows = len(ss.product_entries)
+            ss.page = "review"
 
-        # From this moment, rows that exist become "locked"
-        st.session_state.locked_rows = len(st.session_state.product_entries)
-        st.session_state.page = "review"
 
 # ---------------------------------------------------
-# PAGE 2 — REVIEW PAGE
+# REVIEW PAGE
 # ---------------------------------------------------
 def render_review_page():
-    render_header()
-
     st.markdown("## Review Your Forecast")
-    st.write(f"**Country:** {st.session_state.country}")
-    st.write(f"**Company:** {st.session_state.company}")
-    st.write(f"**Email:** {st.session_state.email}")
+    st.write(f"**Country:** {ss.country}")
+    st.write(f"**Company:** {ss.company}")
+    st.write(f"**Email:** {ss.email}")
 
-    df_review = pd.DataFrame(st.session_state.product_entries)
-    st.dataframe(df_review)
+    df_review = pd.DataFrame(ss.product_entries)
+
+    # Reorder columns for readability
+    col_order = ["group", "name", "detail"] + MONTH_LIST + ["total"]
+    df_review = df_review[col_order]
+
+    st.dataframe(df_review, use_container_width=True)
 
     # --- EXPORT TO EXCEL ---
     buffer = BytesIO()
@@ -428,8 +426,8 @@ def render_review_page():
 
     with col1:
         if st.button("← Go Back & Edit"):
-            # Go back, keep locked_rows as is
-            st.session_state.page = "form"
+            # Going back: keep lock_rows as-is
+            ss.page = "form"
 
     with col2:
         if st.button("Submit Forecast"):
@@ -437,17 +435,18 @@ def render_review_page():
             st.success("Your forecast was submitted successfully!")
             st.balloons()
 
+
 # ---------------------------------------------------
-# GOOGLE SUBMIT
+# SUBMIT TO GOOGLE SHEETS
 # ---------------------------------------------------
 def submit_to_google():
-    df_submit = pd.DataFrame(st.session_state.product_entries)
-    df_submit["User ID"] = str(uuid.uuid4())[:8]
-    df_submit["Email"] = st.session_state.email
-    df_submit["Country"] = st.session_state.country
-    df_submit["Company"] = st.session_state.company
+    df_submit = pd.DataFrame(ss.product_entries)
+    df_submit["User ID"] = ss.user_id
+    df_submit["Email"] = ss.email
+    df_submit["Country"] = ss.country
+    df_submit["Company"] = ss.company
 
-    # Ensure header exists
+    # Ensure header row exists
     if len(sheet.get_all_values()) == 0:
         sheet.append_row(
             [
@@ -482,10 +481,11 @@ def submit_to_google():
             ]
         )
 
+
 # ---------------------------------------------------
-# PAGE ROUTING
+# ROUTER
 # ---------------------------------------------------
-if st.session_state.page == "form":
+if ss.page == "form":
     render_form_page()
 else:
     render_review_page()
