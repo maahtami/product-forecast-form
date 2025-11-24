@@ -188,48 +188,75 @@ def render_form_page():
         st.markdown(f"#### Product {i+1}")
         col1, col2 = st.columns(2)
 
-        # --- Group dropdown ---
-        product_groups = sorted(df["Product Group"].unique())
-        group = col1.selectbox(
-            f"Product Group {i+1}",
-            product_groups,
-            index=product_groups.index(entry["group"]) if entry["group"] in product_groups else 0,
-            key=f"group_{i}"
-        )
+        # This row is NEW if group is still None
+        is_new_row = entry["group"] is None
 
+        # --- Product Group List ---
+        product_groups = sorted(df["Product Group"].unique())
+
+        # PRE-SELECT group
+        default_group = entry["group"] if entry["group"] in product_groups else product_groups[0]
+
+        # Disable dropdown if row already exists
+        with col1:
+            group = st.selectbox(
+                f"Product Group {i+1}",
+                product_groups,
+                index=product_groups.index(default_group),
+                key=f"group_{i}",
+                disabled=not is_new_row    # ← user cannot modify after review
+            )
+
+        # Filter product list
         filtered = df[df["Product Group"] == group]
 
-        # --- Name dropdown ---
-        names = filtered["Product Name"].unique().tolist()
-        name = col2.selectbox(
-            f"Product Name {i+1}",
-            names,
-            index=names.index(entry["name"]) if entry["name"] in names else 0,
-            key=f"name_{i}"
-        )
+        # Name & detail list
+        product_names = filtered["Product Name"].unique().tolist()
+        product_details = filtered["Description"].unique().tolist()
 
-        # --- Description dropdown (large text) ---
-        details = filtered["Description"].unique().tolist()
+        # PRE-SELECT name & detail
+        default_name = entry["name"] if entry["name"] in product_names else product_names[0]
+        default_detail = entry["detail"] if entry["detail"] in product_details else product_details[0]
+
+        # --- Product Name ---
+        with col2:
+            name = st.selectbox(
+                f"Product Name {i+1}",
+                product_names,
+                index=product_names.index(default_name),
+                key=f"name_{i}",
+                disabled=not is_new_row
+            )
+
+        # --- Product Detail (big dropdown) ---
         detail = st.selectbox(
             f"Product Detail {i+1}",
-            details,
-            index=details.index(entry["detail"]) if entry["detail"] in details else 0,
-            key=f"detail_{i}"
+            product_details,
+            index=product_details.index(default_detail),
+            key=f"detail_{i}",
+            disabled=not is_new_row
         )
 
-        # SYNC NAME <-> DETAIL
-        row_name = filtered[filtered["Product Name"] == name]
-        row_detail = filtered[filtered["Description"] == detail]
+        # --- SYNC NAME ↔ DETAIL ---
+        if is_new_row:
+            # If user selects name → update description
+            row_name = filtered[filtered["Product Name"] == name]
+            if not row_name.empty:
+                detail = row_name["Description"].values[0]
 
-        if not row_name.empty:
-            detail = row_name["Description"].values[0]
-        if not row_detail.empty:
+            # If user selects detail → update name
+            row_detail = filtered[filtered["Description"] == detail]
+            if not row_detail.empty:
+                name = row_detail["Product Name"].values[0]
+        else:
+            # locked row → always force synced values
+            row_detail = filtered[filtered["Description"] == detail]
             name = row_detail["Product Name"].values[0]
 
-        # Hidden product code
-        code = row_detail["PRODUCT CODE"].values[0]
+        # Product Code (hidden)
+        product_code = filtered[filtered["Product Name"] == name]["PRODUCT CODE"].values[0]
 
-        # MONTH INPUTS
+        # --- MONTH INPUTS ---
         cols = st.columns(3)
         total = 0
         month_values = {}
@@ -247,17 +274,15 @@ def render_form_page():
 
         st.write(f"**Total: {total}**")
 
-        # SAVE UPDATED ENTRY
+        # SAVE ENTRY (group/name/detail locked for old rows)
         st.session_state.product_entries[i] = {
             "group": group,
             "name": name,
             "detail": detail,
-            "code": code,
+            "code": product_code,
             **month_values,
             "total": total
         }
-
-    st.markdown("---")
 
     # ----------------------
     # REVIEW BUTTON
