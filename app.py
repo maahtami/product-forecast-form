@@ -189,14 +189,24 @@ def render_form_page():
         )
 
         # SYNC
-        if not locked:  # only sync if editable
-            row_by_name = filtered[filtered["Product Name"] == name]
-            row_by_detail = filtered[filtered["Description"] == detail]
+        # --- SYNC NAME <-> DETAIL ---
+        if not locked:
 
-            if not row_by_name.empty:
-                detail = row_by_name["Description"].values[0]
-            if not row_by_detail.empty:
-                name = row_by_detail["Product Name"].values[0]
+            # If user selected NAME → find matching detail
+            if f"name_{i}" in st.session_state:
+                selected_name = st.session_state[f"name_{i}"]
+                row_name = filtered[filtered["Product Name"] == selected_name]
+                if not row_name.empty:
+                    correct_detail = row_name["Description"].values[0]
+                    st.session_state[f"detail_{i}"] = correct_detail  # <-- FORCE UPDATE
+
+            # If user selected DETAIL → find matching name
+            if f"detail_{i}" in st.session_state:
+                selected_detail = st.session_state[f"detail_{i}"]
+                row_detail = filtered[filtered["Description"] == selected_detail]
+                if not row_detail.empty:
+                    correct_name = row_detail["Product Name"].values[0]
+                    st.session_state[f"name_{i}"] = correct_name  # <-- FORCE UPDATE
 
         code = filtered[filtered["Product Name"] == name]["PRODUCT CODE"].values[0]
 
