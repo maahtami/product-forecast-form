@@ -117,9 +117,11 @@ if "country" not in st.session_state:
 def render_header():
     st.markdown(
         f"""
-        <div class="nephro-header">
-            <img src="data:image/png;base64,{logo_base64}" 
-                 style="width:260px; margin-bottom:20px;">
+        <div style="text-align: center; padding: 25px; background-color: white; border-radius: 12px;">
+            <img src="data:image/png;base64,{logo_base64}" width="200" style="margin-bottom:5px;">
+            <p style="color:black; font-size:22px; font-weight:500; margin-top:5px;">
+                Nephrocan Forecast Portal
+            </p>
         </div>
         """,
         unsafe_allow_html=True
